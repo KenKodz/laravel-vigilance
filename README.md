@@ -9,7 +9,9 @@ A driver-agnostic **control center** for Laravel queues, jobs, commands and the 
 
 See what ran — with the parameters it ran with — whether it failed, and **dispatch jobs or run artisan commands manually** from a self-contained dashboard. Think "Horizon, but for every queue driver, plus commands, plus a manual control plane" — and built to run in production, not just locally.
 
-> Status: early development. The capture, storage, manual-control and metrics layers are covered by tests; the dashboard ships as a standalone Livewire UI (no Filament required).
+> **📖 Documentation & guide → [anousss007.github.io/laravel-vigilance](https://anousss007.github.io/laravel-vigilance/)**
+>
+> Published on Packagist. The capture, storage, manual-control, metrics, tracing **and worker-supervisor** layers are covered by tests — including a real multi-process supervisor **chaos battery** validated across the `database`, `redis`, `sqs` and `beanstalkd` drivers (autoscaling, crash-recovery, graceful shutdown, zero orphans). The dashboard ships as a standalone Livewire UI (no Filament required).
 
 ## Why Vigilance (and how it differs from Telescope / Horizon)
 
