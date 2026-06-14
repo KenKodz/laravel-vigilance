@@ -37,8 +37,9 @@ return [
     |
     | "path" is the URI prefix the dashboard is served from. "domain" lets you
     | serve it from a subdomain. "middleware" wraps every dashboard route; the
-    | "Authorize" middleware additionally consults the "viewVigilance" gate
-    | (see VigilanceServiceProvider::gate()), which is local-only by default.
+    | "Authorize" middleware calls Vigilance::check(), which authorizes via a
+    | "viewVigilance" Gate ability (or a Gate::before rule, or Vigilance::auth()),
+    | falling back to "local environment only" when none is defined.
     |
     */
 

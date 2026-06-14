@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Vigilance\Vigilance;
+
+uses(RefreshDatabase::class);
 
 /**
  * Reset the static Vigilance::auth() callback so each test exercises the
@@ -41,4 +44,16 @@ it('lets an explicit Vigilance::auth() callback override the gate', function () 
     Vigilance::auth(fn () => true);
 
     expect(Vigilance::check(request()))->toBeTrue();
+});
+
+it('gates the dashboard route through a viewVigilance ability (proving it is consulted, not cosmetic)', function () {
+    Gate::define('viewVigilance', fn ($user = null) => true);
+
+    $this->get(route('vigilance.overview'))->assertOk();
+});
+
+it('forbids the dashboard route when the viewVigilance ability denies', function () {
+    Gate::define('viewVigilance', fn ($user = null) => false);
+
+    $this->get(route('vigilance.overview'))->assertForbidden();
 });

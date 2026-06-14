@@ -3,6 +3,7 @@
 namespace Vigilance\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Schema;
 use Vigilance\Control\ControlGate;
 use Vigilance\Vigilance;
@@ -63,14 +64,22 @@ class DoctorCommand extends Command
     protected function checkAuthGate(): void
     {
         if (Vigilance::hasCustomAuth()) {
-            $this->reportOk('Dashboard access', 'custom authorization callback registered');
+            $this->reportOk('Dashboard access', 'custom Vigilance::auth() callback registered');
+
+            return;
+        }
+
+        // A "viewVigilance" Gate ability is consulted by Vigilance::check(), so
+        // detect it here too (the dashboard is genuinely gated by it).
+        if ($this->getLaravel()->make(Gate::class)->has('viewVigilance')) {
+            $this->reportOk('Dashboard access', 'authorized by a viewVigilance gate');
 
             return;
         }
 
         app()->environment('local')
             ? $this->reportOk('Dashboard access', 'open in local (default) — define a viewVigilance gate or Vigilance::auth() before production')
-            : $this->reportWarn('Dashboard access', 'default gate — locked to local (403 here) until you define a viewVigilance gate, a Gate::before rule, or Vigilance::auth()');
+            : $this->reportWarn('Dashboard access', 'no viewVigilance gate or Vigilance::auth() — locked to local (403 here); a Gate::before rule also works');
     }
 
     protected function checkControl(ControlGate $gate): void
@@ -125,14 +134,19 @@ class DoctorCommand extends Command
         $queueDefault = (string) config('queue.default', '');
         $driver = (string) config("queue.connections.{$queueDefault}.driver", $queueDefault);
 
-        // Drivers with no persistent queue: there is nothing to supervise.
-        if (in_array($driver, ['sync', 'null'], true)) {
-            $this->reportWarn('Supervisor', "queue.default is '{$queueDefault}' ({$driver}) — nothing for vigilance:supervise to run (it is optional)");
+        // vigilance:supervise runs queue:work, which can only drain drivers that
+        // implement a worker loop (pop()). sync / null and push-only,
+        // run-after-response drivers (e.g. "background") are not supervisable, so
+        // there is no connection to point the supervisor at.
+        $supervisable = ['database', 'redis', 'sqs', 'beanstalkd'];
+
+        if (! in_array($driver, $supervisable, true)) {
+            $this->reportOk('Supervisor', "queue.default '{$queueDefault}' uses the '{$driver}' driver — not supervisable; vigilance:supervise runs ".implode('/', $supervisable).' workers (optional)');
 
             return;
         }
 
-        if ($queueDefault !== '' && $supervisorConnection !== $queueDefault) {
+        if ($supervisorConnection !== $queueDefault) {
             $this->reportWarn('Supervisor', "supervises '{$supervisorConnection}' but the app dispatches to queue.default '{$queueDefault}' — set VIGILANCE_SUPERVISOR_CONNECTION={$queueDefault} or align them");
 
             return;

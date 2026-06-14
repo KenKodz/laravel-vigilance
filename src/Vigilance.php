@@ -16,7 +16,10 @@ use Vigilance\Notifications\Alert;
  */
 class Vigilance
 {
-    public static string $version = '0.1.0';
+    public static string $version = '0.1.1';
+
+    /** Cache-busting token for the bundled stylesheet, derived from its contents. */
+    protected static ?string $assetVersion = null;
 
     /** @var (Closure(mixed): bool)|null */
     protected static ?Closure $authUsing = null;
@@ -60,6 +63,25 @@ class Vigilance
         return static::$authUsing !== null;
     }
 
+    /**
+     * A cache-busting token for the bundled stylesheet, derived from the file's
+     * contents (not the version) so the URL changes whenever the CSS changes —
+     * across dev builds and releases alike. This makes the long-lived,
+     * "immutable" cache header safe: the browser only re-fetches when the bytes
+     * actually change. Cached per process.
+     */
+    public static function assetVersion(): string
+    {
+        if (static::$assetVersion !== null) {
+            return static::$assetVersion;
+        }
+
+        $path = __DIR__.'/../resources/dist/vigilance.css';
+        $hash = is_file($path) ? substr((string) @md5_file($path), 0, 12) : '';
+
+        return static::$assetVersion = ($hash !== '' ? $hash : static::$version);
+    }
+
     public static function check(mixed $request = null): bool
     {
         // An explicit Vigilance::auth() callback always wins.
@@ -67,17 +89,21 @@ class Vigilance
             return (bool) (static::$authUsing)($request);
         }
 
-        // Otherwise defer to Laravel's Gate so a "viewVigilance" ability — or a
-        // Gate::before hook (e.g. "admins can do anything") — authorizes the
-        // dashboard, exactly like Horizon's viewHorizon / Telescope / Pulse.
-        // The service provider registers a local-only "viewVigilance" default
-        // unless the application defines its own. We funnel through the Gate
-        // (rather than checking the environment directly) so that before-hooks
-        // are always consulted.
         $request ??= request();
         $user = (is_object($request) && method_exists($request, 'user')) ? $request->user() : null;
+        $gate = Gate::forUser($user);
 
-        return Gate::forUser($user)->check('viewVigilance', [$request]);
+        // If the application defined a "viewVigilance" ability, it (together with
+        // any Gate::before hook) is the sole authority — exactly like Horizon's
+        // viewHorizon / Telescope / Pulse.
+        if ($gate->has('viewVigilance')) {
+            return (bool) $gate->check('viewVigilance', [$request]);
+        }
+
+        // No explicit ability: still run the Gate so a Gate::before rule (e.g.
+        // "admins can do anything") can grant access; otherwise fall back to the
+        // secure local-only default.
+        return (bool) $gate->check('viewVigilance', [$request]) || app()->environment('local');
     }
 
     /**

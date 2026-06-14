@@ -6,6 +6,27 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-14
+
+### Fixed
+- The dashboard stylesheet is now cache-busted by a hash of its **contents**
+  rather than the package version, so the long-lived `immutable` cache header no
+  longer serves a stale stylesheet after an upgrade. (Symptom: the redesigned
+  dashboard rendering unstyled because the browser kept the old CSS.)
+- `vigilance:doctor` now recognises a `viewVigilance` Gate ability (or a
+  `Gate::before` rule) as configured dashboard authorization, instead of always
+  reporting the local-only default. Authorization already flowed through the
+  Gate — this fixes the false diagnostic.
+- `vigilance:doctor` no longer advises pointing the supervisor at a
+  non-drainable queue driver (`sync`/`null`, or push-only "run after response"
+  drivers like `background`); it reports those as not supervisable instead.
+
+### Changed
+- Dashboard authorization no longer registers a package-level `viewVigilance`
+  gate; `Vigilance::check()` resolves a `viewVigilance` ability / `Gate::before`
+  rule and falls back to local-only itself. Behaviour is unchanged, but an
+  app-defined `viewVigilance` ability is now detectable.
+
 ## [0.1.0] - 2026-06-14
 
 ### Changed

@@ -17,7 +17,8 @@
         })();
     </script>
 
-    <link rel="stylesheet" href="{{ route('vigilance.assets.css') }}?v={{ \Vigilance\Vigilance::$version }}">
+    <link rel="stylesheet" href="{{ route('vigilance.assets.css') }}?v={{ \Vigilance\Vigilance::assetVersion() }}">
+
 
     @livewireStyles
 </head>
