@@ -31,6 +31,13 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Temporary: nesbot/carbon 3.12 changed the Carbon::plus()/minus()
+          # signature; Laravel 13 matches it but Laravel 12 does not yet, so
+          # Laravel 12 + Carbon 3.12 fatals on class load. Hold Carbon < 3.12 on
+          # the Laravel 12 legs until a compatible Laravel 12 patch ships.
+          if [ "${{ matrix.laravel }}" = "12.*" ]; then
+            composer require "nesbot/carbon:<3.12" --no-update --no-interaction
+          fi
           composer require "laravel/framework:${{ matrix.laravel }}" "livewire/livewire:${{ matrix.livewire }}" --no-update
           composer update --prefer-dist --no-interaction --no-progress
 
