@@ -6,6 +6,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-06-15
+
+### Added
+- Auto-scaling now works on **every supervisable queue driver**. `QueueDepth`
+  reads live backlog for `beanstalkd` (stats-tube `current-jobs-ready`,
+  pheanstalk v4–v8) and `sqs` (`ApproximateNumberOfMessages`) in addition to
+  `database` (COUNT) and `redis` (LLEN) — so `vigilance:supervise` scales those
+  connections by load instead of idling at `min_processes`. All four driver
+  paths are unit-tested; the beanstalkd/sqs paths were additionally verified
+  against the real pheanstalk and aws-sdk-php APIs. Depth reads are defensive
+  (never throw) and fall back to "unknown" → min on any error.
+- `suggest`: `pda/pheanstalk` and `aws/aws-sdk-php` (needed only to auto-scale a
+  beanstalkd / SQS supervisor by backlog).
+
 ## [0.1.2] - 2026-06-14
 
 ### Fixed
