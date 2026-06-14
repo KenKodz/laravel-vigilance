@@ -77,6 +77,17 @@ class SupervisorOptions
         ];
     }
 
+    /**
+     * The worker's --name, carrying a stable "#vigilance" marker so the
+     * supervisor can reliably identify and reap *its own* workers (including
+     * ones orphaned by a Windows taskkill race, or left by a crashed prior
+     * master), without ever touching unrelated queue:work processes.
+     */
+    public function workerName(): string
+    {
+        return $this->name.'#vigilance';
+    }
+
     public function balancing(): bool
     {
         return in_array($this->balance, ['simple', 'auto'], true);
@@ -120,7 +131,7 @@ class SupervisorOptions
             '--sleep='.$this->sleep,
             '--timeout='.$this->timeout,
             '--tries='.$this->tries,
-            '--name='.$this->name,
+            '--name='.$this->workerName(),
         ];
 
         if ($this->maxTime > 0) {

@@ -6,6 +6,24 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-14
+
+### Fixed
+- Worker termination on Windows is now fast and reliable. Previously a
+  `vigilance:supervise` shutdown / scale-down / pause could block for the full
+  worker `timeout` per worker (waiting on a SIGTERM Windows cannot deliver) and,
+  under heavy scale churn, leave orphaned `queue:work` processes behind. Workers
+  now launch with a `#vigilance`-tagged `--name`, and the supervisor force-reaps
+  its own orphaned workers on terminate / pause — also cleaning up workers left
+  by a crashed master. POSIX behaviour is unchanged (graceful SIGTERM, then
+  SIGKILL; relies on the OS/systemd for tree reaping). Validated by a real
+  multi-process chaos battery (drain, autoscale, crash-recovery, rolling
+  restart, failure capture, balancing, chaos) with zero orphans.
+
+### Added
+- `Supervisor::workerPids()` and `Supervisor::poolCounts()` for introspecting a
+  running supervisor's worker processes.
+
 ## [0.1.1] - 2026-06-14
 
 ### Fixed

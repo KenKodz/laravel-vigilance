@@ -40,6 +40,12 @@ class Pool
             $worker = array_pop($this->workers);
             $worker->terminate($this->options->timeout);
         }
+
+        // Fully stopping the pool (e.g. on pause): sweep up any worker that
+        // escaped a per-process kill so none keep draining the queue.
+        if ($target === 0) {
+            $this->reap();
+        }
     }
 
     /**
@@ -59,6 +65,37 @@ class Pool
         }
 
         $this->workers = [];
+
+        $this->reap();
+    }
+
+    /**
+     * Windows-only safety net: kill any of THIS supervisor's worker processes
+     * that survived a per-process stop (taskkill PID races, wrapper PIDs, or a
+     * worker launched in the same tick it was told to stop). Workers are matched
+     * by their "#vigilance"-tagged --name, so unrelated queue:work processes are
+     * never touched. POSIX relies on Process::stop()'s signal + (under systemd)
+     * cgroup reaping, so this is a no-op there.
+     */
+    protected function reap(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            return;
+        }
+
+        $marker = '--name='.$this->options->workerName();
+
+        $ps = 'Get-CimInstance Win32_Process -Filter "Name=\'php.exe\'" '
+            .'| Where-Object { $_.CommandLine -like \'*'.$marker.'*\' } '
+            .'| ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }';
+
+        // -EncodedCommand (UTF-16LE base64) sidesteps all cmd.exe quoting issues.
+        $utf16 = '';
+        foreach (str_split($ps) as $ch) {
+            $utf16 .= $ch."\x00";
+        }
+
+        @exec('powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand '.base64_encode($utf16).' 2>&1');
     }
 
     /**
@@ -75,6 +112,26 @@ class Pool
 
             if ($pid !== null) {
                 $out[] = ['pid' => $pid, 'queue' => $this->key];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Live worker PIDs in this pool.
+     *
+     * @return list<int>
+     */
+    public function pids(): array
+    {
+        $out = [];
+
+        foreach ($this->workers as $worker) {
+            $pid = $worker->pid();
+
+            if ($pid !== null) {
+                $out[] = $pid;
             }
         }
 

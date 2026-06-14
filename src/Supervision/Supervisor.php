@@ -83,6 +83,38 @@ class Supervisor
     }
 
     /**
+     * Live worker PIDs across all pools.
+     *
+     * @return list<int>
+     */
+    public function workerPids(): array
+    {
+        $pids = [];
+
+        foreach ($this->pools as $pool) {
+            $pids = array_merge($pids, $pool->pids());
+        }
+
+        return $pids;
+    }
+
+    /**
+     * Live worker count per pool key.
+     *
+     * @return array<string, int>
+     */
+    public function poolCounts(): array
+    {
+        $out = [];
+
+        foreach ($this->pools as $key => $pool) {
+            $out[$key] = $pool->count();
+        }
+
+        return $out;
+    }
+
+    /**
      * Total worker processes currently running across all pools.
      */
     public function totalProcesses(): int
