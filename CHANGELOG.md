@@ -12,6 +12,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Standalone Livewire dashboard: overview, runs, run detail, failures,
   dispatcher, command runner, schedule and workload pages. Compatible with both
   Livewire 3.5+ and Livewire 4 (class-based components; no rewrite required).
+- Supports Laravel 12 and 13 on PHP 8.2+ (Symfony 7 / 8). Laravel 11 is not
+  supported — it is past Laravel's security-support window.
 - Manual control: dispatch allowlisted jobs (typed form reflected from the
   constructor) and run allowlisted artisan commands, with an audit log.
 - Failure grouping with Sentry-style fingerprints and a `FailureRecorded` event

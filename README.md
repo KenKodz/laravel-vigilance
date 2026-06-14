@@ -73,7 +73,7 @@ response is sent. Enable with `VIGILANCE_TRACING=true`; see
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11, 12 or 13
+- Laravel 12 or 13
 - Livewire 3.5+ or 4 (pulled in automatically)
 
 ## Installation
