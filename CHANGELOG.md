@@ -6,6 +6,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-15
+
 ### Added
 - Alert routing can now be configured **from `.env`** — set
   `VIGILANCE_ALERT_EMAILS` (single address or comma-separated list) and/or
