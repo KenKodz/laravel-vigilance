@@ -23,7 +23,13 @@ See what ran — with the parameters it ran with — whether it failed, and **di
 | Scheduler monitoring | ❌ | partial | ✅ (late / failed / grace) |
 | Manual dispatch of jobs | ❌ | ❌ | ✅ (typed form from the constructor) |
 | Run arbitrary commands from UI | ❌ | ❌ | ✅ (allowlisted) |
-| Failure grouping | ❌ | ❌ | ✅ (Sentry-style fingerprint) |
+| Error tracking (grouped issues) | ❌ | ✅ (view) | ✅ (web · queue · command · browser, fingerprinted inbox) |
+| Whole-app APM + per-route percentiles | ❌ | ❌ | ✅ (p50/p95/p99, Apdex, error rate) |
+| Real User Monitoring (Core Web Vitals) | ❌ | ❌ | ✅ (LCP/INP/CLS/FCP/TTFB + JS errors) |
+| SLOs + error budgets | ❌ | ❌ | ✅ (burn-rate alerts) |
+| Trace-correlated log explorer | ❌ | ✅ (view) | ✅ (searchable, linked to traces) |
+| Custom business metrics | ❌ | ❌ | ✅ (one-line API + dashboard) |
+| Alerting | ❌ | ❌ | ✅ (mail · Slack · Discord · Teams · webhooks + incidents) |
 | Production-oriented | ✅ | ❌ (debug tool) | ✅ (see below) |
 
 ### Built for production
@@ -71,6 +77,36 @@ stay cheap: spans are collected in a ~2 µs in-memory push and the trace is
 you store a tiny fraction, never everything, and the write happens after the
 response is sent. Enable with `VIGILANCE_TRACING=true`; see
 [docs/tracing.md](docs/tracing.md).
+
+## Observability suite
+
+On top of capture, APM and tracing, Vigilance is a full front-to-back
+observability platform. Each layer keeps the same production-first posture
+(captured cheaply, flushed after the response, sampled and bounded) and lands on
+its own dashboard page. Full guide in
+[docs/observability.md](docs/observability.md).
+
+| Feature | Page | What it gives you |
+|---|---|---|
+| **Issues** — unified error tracking | `/vigilance/issues` | Every exception (web · queue · command · `Vigilance::report()` · browser) fingerprinted into a grouped inbox with stacktrace, context, occurrence sparkline, assign/ack/mute/resolve |
+| **Routes** — per-route performance | `/vigilance/routes` | Throughput, error rate, Apdex and exact **p50/p95/p99** latency per route |
+| **Web Vitals** — RUM | `/vigilance/vitals` | Core Web Vitals (LCP/INP/CLS/FCP/TTFB) + JS errors from real visitors via the `@vigilanceRum` beacon |
+| **SLOs** — error budgets | `/vigilance/slos` | Availability / latency objectives vs. an error budget, with a short-window **burn-rate** alert |
+| **Incidents** — alerting depth | `/vigilance/incidents` | Fired alerts persisted as incidents (open → auto-resolved) with level, occurrences and **MTTR**; channels for Discord / Teams / generic webhooks |
+| **Custom Metrics** — business KPIs | `/vigilance/custom-metrics` | `Vigilance::increment()` / `gauge()` → auto-discovered counter & gauge cards with sparklines |
+| **Logs** — explorer | `/vigilance/logs` | Searchable application logs **correlated to the trace that emitted them** |
+
+```php
+use Vigilance\Vigilance;
+
+Vigilance::increment('signups');                 // custom counter
+Vigilance::gauge('cart_value', $cart->total());  // custom gauge
+```
+
+```blade
+{{-- drop in your layout <head> after VIGILANCE_RUM=true to collect Web Vitals --}}
+@vigilanceRum
+```
 
 ## Requirements
 
@@ -158,7 +194,12 @@ See `config/vigilance.php` — every option is documented inline. Highlights:
 - `control.jobs` / `control.commands` — manual-control allowlists
 - `redact` — secret key names
 - `retention.days` / `retention.failed_days` — pruning windows
-- `notifications.mail` / `notifications.slack` — where alerts are delivered
+- `notifications.mail` / `slack` / `discord` / `teams` / `webhooks` — where alerts are delivered
+- `issues` — unified error tracking (sample rate, request-input capture, ignore list)
+- `rum` — Real User Monitoring (enable, throttle, JS-error capture)
+- `slos` — service-level objectives + error budgets (define your own)
+- `logs` — trace-correlated log explorer (enable, min level, sample, retention)
+- `alerts` — rule engine + incident tracking (per-rule thresholds, `incidents`)
 
 ### Recommended production profile
 
@@ -171,14 +212,23 @@ VIGILANCE_RETENTION_DAYS=7
 ## Alerting
 
 Vigilance evaluates rule-based alerts at `vigilance:snapshot` time — queue
-backlog, failure-rate, exception spikes, slow-request rate and overdue/failed
-scheduled tasks — each throttled per key. Point alerts at email and/or Slack
-**straight from `.env`** (no service provider required):
+backlog, failure-rate, exception spikes, slow-request rate, overdue/failed
+scheduled tasks (a **dead-man's-switch**) and **SLO burn rate** — each throttled
+per key. Alerts route to email, Slack, **Discord**, **Microsoft Teams** and any
+number of **generic webhooks** (PagerDuty, Opsgenie, …) **straight from `.env`**
+(no service provider required):
 
 ```env
 VIGILANCE_ALERT_EMAILS=ops@example.com,cto@example.com   # single or comma-separated
 VIGILANCE_SLACK_WEBHOOK=https://hooks.slack.com/services/…
+VIGILANCE_DISCORD_WEBHOOK=https://discord.com/api/webhooks/…
+VIGILANCE_TEAMS_WEBHOOK=https://outlook.office.com/webhook/…
+VIGILANCE_ALERT_WEBHOOKS=https://events.pagerduty.com/…,https://…   # one or comma-separated
 ```
+
+Fired alerts are persisted as **incidents** (opened on first fire, auto-resolved
+when the alert stops recurring), tracked with occurrence counts and **MTTR** on
+the **Incidents** page.
 
 Prefer code? Set them in a service provider's `boot()` — an explicit call
 **overrides** the `.env` values:

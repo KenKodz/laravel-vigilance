@@ -79,9 +79,20 @@ slow/error rules: you store the traces worth debugging and almost nothing else.
 | `requests` — HTTP, via prepended middleware | `queries` — every DB query (sql + connection) |
 | `jobs` — queued jobs (JobProcessing→Processed/Failed) | `cache` — hits / misses |
 | `commands` — console commands (opt-in) | `http` — outgoing Laravel HTTP-client calls |
+| | `redis` — Redis commands |
+| | `mail` — messages sent |
+| | `notifications` — notifications sent |
+
+A likely **N+1** is flagged when one identical query shape runs at least
+`tracing.n_plus_one_threshold` (10) times in a single trace.
 
 Requests whose path matches `tracing.ignore` (the dashboard itself, Livewire,
 Telescope/Horizon, …) are never traced.
+
+If the [log explorer](observability.md#log-explorer) is enabled
+(`VIGILANCE_LOGS=true`), every log line emitted inside a trace is **correlated to
+it** — the trace detail page lists the logs it produced, and each log links back
+to its trace.
 
 ## Configuration reference
 
@@ -93,7 +104,7 @@ Telescope/Horizon, …) are never traced.
     'max_spans' => 1000,
     'max_attribute_length' => 2000,
     'capture' => ['requests' => true, 'jobs' => true, 'commands' => false],
-    'spans' => ['queries' => true, 'cache' => true, 'http' => true],
+    'spans' => ['queries' => true, 'cache' => true, 'http' => true, 'redis' => true, 'mail' => true, 'notifications' => true],
     'ignore' => ['#^/vigilance#', '#^/livewire/#', /* … */],
     'retention' => env('VIGILANCE_TRACING_RETENTION', '72 hours'),
     'trim' => ['lottery' => [1, 200]],

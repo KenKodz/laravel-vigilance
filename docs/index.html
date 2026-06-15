@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#08080b">
 <meta name="color-scheme" content="dark">
 <title>Vigilance — a production control center for Laravel queues, jobs & the scheduler</title>
-<meta name="description" content="Driver-agnostic monitoring, a Horizon-replacement worker supervisor, whole-app APM and per-request tracing for Laravel — in one self-contained dashboard. Works on every queue driver.">
+<meta name="description" content="Driver-agnostic monitoring, a Horizon-replacement worker supervisor, whole-app APM, per-request tracing, error tracking, RUM, SLOs and a trace-correlated log explorer for Laravel — in one self-contained dashboard. Works on every queue driver.">
 <link rel="canonical" href="https://anousss007.github.io/laravel-vigilance/">
 <meta property="og:title" content="Vigilance — Laravel queue & job control center">
-<meta property="og:description" content="Horizon, but for every queue driver — plus commands, APM, tracing and a manual control plane. Production-first.">
+<meta property="og:description" content="Horizon, but for every queue driver — plus commands, APM, tracing, error tracking, RUM, SLOs, logs and a manual control plane. Production-first.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://anousss007.github.io/laravel-vigilance/">
 <meta property="og:image" content="https://anousss007.github.io/laravel-vigilance/assets/og.png">
@@ -17,7 +17,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Vigilance — Laravel queue & job control center">
-<meta name="twitter:description" content="Horizon, but for every queue driver — plus commands, APM, tracing and a manual control plane. Production-first.">
+<meta name="twitter:description" content="Horizon, but for every queue driver — plus commands, APM, tracing, error tracking, RUM, SLOs, logs and a manual control plane. Production-first.">
 <meta name="twitter:image" content="https://anousss007.github.io/laravel-vigilance/assets/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310b981'/%3E%3Ctext x='16' y='23' font-family='system-ui,sans-serif' font-size='20' font-weight='800' text-anchor='middle' fill='%23041410'%3EV%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/css/site.css">
@@ -38,6 +38,7 @@
       <a href="#features">Features</a>
       <a href="#supervisor">Supervisor</a>
       <a href="#apm">APM &amp; Tracing</a>
+      <a href="#observability">Observability</a>
       <a href="#install">Install</a>
       <a href="#config">Configure</a>
       <a href="#commands">Commands</a>
@@ -175,8 +176,26 @@
 
       <div class="card reveal">
         <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
-        <h3>Failure grouping &amp; alerts</h3>
-        <p>Sentry-style fingerprinting collapses identical failures into groups with counts. Rule-based alerts (failure rate, exception spikes, queue backlog) route to mail / Slack / custom.</p>
+        <h3>Error tracking &amp; alerts</h3>
+        <p>A fingerprinted <strong>Issues</strong> inbox over every layer — web, queue, command and browser errors — with stacktraces and context. Rule-based alerts route to mail / Slack / Discord / Teams / webhooks, persisted as incidents with MTTR.</p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="0.5"/><rect x="12" y="7" width="3" height="10" rx="0.5"/><rect x="17" y="13" width="3" height="4" rx="0.5"/></svg></div>
+        <h3>Front-end &amp; route performance</h3>
+        <p>Per-route throughput, error rate, Apdex and exact <strong>p50 / p95 / p99</strong> latency — plus Real User Monitoring of Core Web Vitals (LCP, INP, CLS, FCP, TTFB) from real visitors via a tiny beacon.</p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>SLOs &amp; error budgets</h3>
+        <p>Track availability and latency objectives against an error budget, with a short-window <strong>burn-rate</strong> alert — so you hear about a budget you'll exhaust before it's gone.</p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><line x1="8" x2="14" y1="13" y2="13"/><line x1="8" x2="14" y1="17" y2="17"/></svg></div>
+        <h3>Logs &amp; custom metrics</h3>
+        <p>A searchable log explorer that <strong>correlates every line to the trace that emitted it</strong>, and a one-line API (<code class="inline">Vigilance::increment()</code> / <code class="inline">gauge()</code>) for your own business KPIs on the dashboard.</p>
       </div>
 
     </div>
@@ -203,9 +222,13 @@
           <tr><td>Worker supervisor + autoscale</td><td class="yes">✓ (Redis)</td><td class="no">—</td><td class="vig">✓ every driver</td></tr>
           <tr><td>Artisan commands</td><td class="no">—</td><td>view</td><td class="vig">✓ capture &amp; run</td></tr>
           <tr><td>Scheduler monitoring</td><td class="no">—</td><td>partial</td><td class="vig">✓ late / failed / grace</td></tr>
-          <tr><td>Whole-app APM</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ (Pulse-parity)</td></tr>
+          <tr><td>Whole-app APM + route percentiles</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ Pulse-parity · p50/p95/p99 · Apdex</td></tr>
           <tr><td>Manual dispatch / run from UI</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ allowlisted + audited</td></tr>
-          <tr><td>Failure grouping</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ fingerprinted</td></tr>
+          <tr><td>Error tracking (grouped issues)</td><td class="no">—</td><td>view</td><td class="vig">✓ web · queue · command · browser</td></tr>
+          <tr><td>Real User Monitoring</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ Core Web Vitals + JS errors</td></tr>
+          <tr><td>SLOs + error budgets</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ burn-rate alerts</td></tr>
+          <tr><td>Trace-correlated logs</td><td class="no">—</td><td>view</td><td class="vig">✓ searchable + linked to traces</td></tr>
+          <tr><td>Alerting channels</td><td class="no">—</td><td class="no">—</td><td class="vig">✓ mail · Slack · Discord · Teams · webhooks · incidents</td></tr>
           <tr><td>Production-oriented</td><td class="yes">✓</td><td class="no">debug tool</td><td class="vig">✓ sampled · capped · guarded</td></tr>
         </tbody>
       </table>
@@ -274,6 +297,38 @@
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg> <span>Per-recorder sampling, thresholds &amp; grouping keep storage bounded.</span></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg> <span>An <code class="inline">Ingest</code> export seam fans the same feed out to an external APM.</span></li>
         </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ OBSERVABILITY ============================ -->
+<section class="section" id="observability">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="kicker">Front-to-back observability</span>
+      <h2>Errors, RUM, SLOs, custom metrics &amp; logs</h2>
+      <p>One dashboard for the whole picture — every layer captured cheaply, flushed after the response, sampled and bounded. <a href="https://github.com/anousss007/laravel-vigilance/blob/main/docs/observability.md" style="text-decoration:underline">Read the full observability guide →</a></p>
+    </div>
+    <div class="split">
+      <div class="split__text">
+        <ul class="checklist" role="list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg> <span><strong>Issues</strong> — a fingerprinted error inbox across web, queue, command &amp; browser, with stacktrace and context.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg> <span><strong>Routes &amp; Web Vitals</strong> — per-route p50/p95/p99 + Apdex, and RUM of Core Web Vitals from real users.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg> <span><strong>SLOs &amp; incidents</strong> — error budgets with burn-rate alerts; fired alerts tracked as incidents with MTTR.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg> <span><strong>Logs &amp; custom metrics</strong> — searchable logs correlated to traces, plus a one-line business-metrics API.</span></li>
+        </ul>
+      </div>
+      <div class="copy">
+        <button class="copy__btn" type="button">copy</button>
+<pre class="code" tabindex="0"><span class="tok-c">// custom business metrics — anywhere in your app</span>
+Vigilance::<span class="tok-f">increment</span>(<span class="tok-s">'signups'</span>);
+Vigilance::<span class="tok-f">gauge</span>(<span class="tok-s">'cart_value'</span>, <span class="tok-v">$cart</span>->total());
+
+<span class="tok-c">// .env — turn on RUM, then drop @vigilanceRum in your layout head</span>
+<span class="tok-v">VIGILANCE_RUM</span>=true
+<span class="tok-v">VIGILANCE_LOGS</span>=true            <span class="tok-c"># trace-correlated log explorer</span>
+<span class="tok-v">VIGILANCE_DISCORD_WEBHOOK</span>=https://discord.com/api/webhooks/…</pre>
       </div>
     </div>
   </div>
@@ -430,6 +485,7 @@ Gate::<span class="tok-f">define</span>(<span class="tok-s">'viewVigilance'</spa
         <a href="#features">Features</a>
         <a href="#supervisor">Worker supervisor</a>
         <a href="#apm">APM &amp; tracing</a>
+        <a href="#observability">Observability</a>
         <a href="#config">Configuration</a>
         <a href="#commands">Commands</a>
       </div>
@@ -443,8 +499,10 @@ Gate::<span class="tok-f">define</span>(<span class="tok-s">'viewVigilance'</spa
       <div class="footer__col">
         <h2>Resources</h2>
         <a href="https://github.com/anousss007/laravel-vigilance/blob/main/README.md" target="_blank" rel="noopener">README</a>
+        <a href="https://github.com/anousss007/laravel-vigilance/blob/main/docs/observability.md" target="_blank" rel="noopener">Observability guide</a>
+        <a href="https://github.com/anousss007/laravel-vigilance/blob/main/docs/apm.md" target="_blank" rel="noopener">APM guide</a>
+        <a href="https://github.com/anousss007/laravel-vigilance/blob/main/docs/tracing.md" target="_blank" rel="noopener">Tracing guide</a>
         <a href="https://github.com/anousss007/laravel-vigilance/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
-        <a href="https://github.com/anousss007/laravel-vigilance/issues" target="_blank" rel="noopener">Issues</a>
       </div>
     </div>
     <div class="footer__bottom">
