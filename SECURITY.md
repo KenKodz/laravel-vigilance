@@ -7,7 +7,7 @@ The latest released minor version receives security fixes.
 ## Reporting a Vulnerability
 
 If you discover a security vulnerability in Vigilance, please report it
-privately by emailing **info@remix-it.be**. Do **not** open a public issue for
+privately by emailing **info@remix-it.com**. Do **not** open a public issue for
 security problems.
 
 You will receive a response as quickly as possible. Please include:
