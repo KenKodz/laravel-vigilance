@@ -236,7 +236,10 @@ VIGILANCE_ALERT_WEBHOOKS=https://events.pagerduty.com/…,https://…   # one or
 
 Fired alerts are persisted as **incidents** (opened on first fire, auto-resolved
 when the alert stops recurring), tracked with occurrence counts and **MTTR** on
-the **Incidents** page.
+the **Incidents** page. You're notified **once when an incident opens** (and
+again only if it escalates or recurs) — a sustained condition like a breaching
+SLO won't email you every window. Set `alerts.renotify_minutes` for periodic
+reminders while an incident stays open.
 
 Prefer code? Set them in a service provider's `boot()` — an explicit call
 **overrides** the `.env` values:

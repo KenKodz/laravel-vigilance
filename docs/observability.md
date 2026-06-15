@@ -173,6 +173,11 @@ recurrence, and **auto-resolved** once the alert stops recurring for
 `alerts.incident_resolve_after` throttle windows. The **Incidents** page is a
 timeline of open / resolved incidents with level, occurrence count and **MTTR**.
 
+You're notified **once per incident** — when it opens, and again only if its
+severity escalates or it resolves and later recurs. A sustained condition (a
+breaching SLO, a backed-up queue) therefore pages you once, not every window.
+Set `alerts.renotify_minutes` > 0 for a periodic reminder while it stays open.
+
 ```php
 // config/vigilance.php → 'alerts'
 'incidents' => true,

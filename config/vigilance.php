@@ -416,6 +416,14 @@ return [
         'incidents' => true,
         'incident_resolve_after' => 3,
 
+        // With incidents on, you're notified ONCE when an incident opens (or its
+        // severity escalates), then it stays quiet until it resolves — so a
+        // sustained condition (e.g. a breaching SLO) doesn't email you every
+        // window. Set "renotify_minutes" > 0 to get a reminder every N minutes
+        // while an incident is still open (0 = notify once). With incidents off,
+        // alerts fall back to one notification per "throttle_minutes" window.
+        'renotify_minutes' => (int) env('VIGILANCE_ALERT_RENOTIFY_MINUTES', 0),
+
         'rules' => [
             'queue_long_wait' => ['enabled' => true, 'seconds' => (int) env('VIGILANCE_LONG_WAIT_SECONDS', 60)],
             'error_rate' => ['enabled' => true, 'min_runs' => 20, 'percent' => 20],

@@ -136,7 +136,7 @@ Vigilance::gauge('cart_value', $cart->total());  // gauge (avg / peak / min)
 
 ## Alerting (mail / Slack / Discord / Teams / webhooks / custom) + incidents
 
-Rules are evaluated at `vigilance:snapshot` time and throttled per key: `queue_long_wait`, `error_rate`, `exception_spike`, `slow_request_rate`, `scheduled_task_late` (a **dead-man's-switch**), `slo_burn`, `new_issue`, `issue_regression`, `anomaly` (dynamic baselines) and `deploy_regression` (bad deploy). Configure them under `alerts.rules`; route delivery from `.env` or code. Fired alerts are persisted as **incidents** (`alerts.incidents`, on by default) — opened on first fire, auto-resolved when they stop recurring — with occurrence counts and MTTR on the **Incidents** page (`/vigilance/incidents`).
+Rules are evaluated at `vigilance:snapshot` time and throttled per key: `queue_long_wait`, `error_rate`, `exception_spike`, `slow_request_rate`, `scheduled_task_late` (a **dead-man's-switch**), `slo_burn`, `new_issue`, `issue_regression`, `anomaly` (dynamic baselines) and `deploy_regression` (bad deploy). Configure them under `alerts.rules`; route delivery from `.env` or code. Fired alerts are persisted as **incidents** (`alerts.incidents`, on by default) — opened on first fire, auto-resolved when they stop recurring — with occurrence counts and MTTR on the **Incidents** page (`/vigilance/incidents`). You're notified **once per incident** (open / escalate / recur), so a sustained condition doesn't spam every window; set `alerts.renotify_minutes` for periodic reminders.
 
 ```ini
 # .env — simplest path, no provider needed

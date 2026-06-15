@@ -6,6 +6,17 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-15
+
+### Fixed
+- Alerts for a **sustained** condition no longer repeat every throttle window
+  (e.g. a breaching SLO emailing every 15 minutes — bad DX). With incident
+  tracking on (the default), you're notified **once when an incident opens**,
+  and again only if its severity escalates, or it resolves and later recurs. Set
+  `alerts.renotify_minutes` (`VIGILANCE_ALERT_RENOTIFY_MINUTES`) for periodic
+  reminders while an incident stays open (0 = once). With incidents off,
+  behaviour is unchanged (one notification per `throttle_minutes`).
+
 ## [0.5.0] - 2026-06-15
 
 A proactive-monitoring release: release-health deploy gating, smarter alerting

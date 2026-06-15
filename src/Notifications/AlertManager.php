@@ -57,22 +57,16 @@ class AlertManager
         }
 
         $throttle = (int) config('vigilance.alerts.throttle_minutes', 15);
+        $renotify = (int) config('vigilance.alerts.renotify_minutes', 0);
         $sent = 0;
 
         foreach ($this->rules() as $rule) {
             try {
                 foreach ($rule->evaluate() as $alert) {
-                    // Track the incident on every tick the condition holds…
-                    $this->recordIncident($alert);
-
-                    // …but only notify once per throttle window.
-                    if (Cache::has($this->cacheKey($alert->key))) {
-                        continue;
+                    if ($this->shouldNotify($alert, $throttle, $renotify)) {
+                        $this->dispatch($alert);
+                        $sent++;
                     }
-
-                    Cache::put($this->cacheKey($alert->key), true, now()->addMinutes(max(1, $throttle)));
-                    $this->dispatch($alert);
-                    $sent++;
                 }
             } catch (Throwable) {
                 // A broken rule must never break the snapshot cycle.
@@ -85,13 +79,52 @@ class AlertManager
     }
 
     /**
+     * Decide whether to actually notify for this alert. When incident tracking
+     * is on (the default), we notify ONCE when the incident opens (or escalates
+     * in severity) and then stay quiet for the life of the incident — so a
+     * sustained condition (e.g. a breaching SLO) doesn't email you every
+     * throttle window. Set alerts.renotify_minutes to get periodic reminders
+     * while an incident stays open. With incident tracking off, we fall back to
+     * the legacy per-key throttle.
+     */
+    protected function shouldNotify(Alert $alert, int $throttle, int $renotify): bool
+    {
+        $status = $this->recordIncident($alert);
+
+        if ($status === 'disabled') {
+            if (Cache::has($this->cacheKey($alert->key))) {
+                return false;
+            }
+
+            Cache::put($this->cacheKey($alert->key), true, now()->addMinutes(max(1, $throttle)));
+
+            return true;
+        }
+
+        $notify = match ($status) {
+            'opened', 'escalated' => true,
+            default => $renotify > 0 && ! Cache::has($this->renotifyKey($alert->key)),
+        };
+
+        if ($notify && $renotify > 0) {
+            Cache::put($this->renotifyKey($alert->key), true, now()->addMinutes($renotify));
+        }
+
+        return $notify;
+    }
+
+    /**
      * Open an incident for the alert, or refresh an already-open one. Tracks
      * occurrences and last-seen so it can auto-resolve when the alert stops.
+     *
+     * @return string 'opened' (new), 'escalated' (severity rose), 'ongoing'
+     *                (already open, same/lower severity) or 'disabled'
+     *                (incident tracking off / unavailable).
      */
-    protected function recordIncident(Alert $alert): void
+    protected function recordIncident(Alert $alert): string
     {
         if (! config('vigilance.alerts.incidents', true)) {
-            return;
+            return 'disabled';
         }
 
         try {
@@ -109,18 +142,34 @@ class AlertManager
                     'last_seen_at' => now(),
                 ]);
 
-                return;
+                return 'opened';
             }
+
+            // Only escalate (and re-notify) when the severity actually rises;
+            // never downgrade a recorded incident's level.
+            $escalated = $this->levelRank($alert->level) > $this->levelRank((string) $incident->level);
 
             $incident->update([
                 'occurrences' => $incident->occurrences + 1,
                 'last_seen_at' => now(),
                 'message' => $alert->message,
-                'level' => $alert->level,
+                'level' => $escalated ? $alert->level : $incident->level,
             ]);
+
+            return $escalated ? 'escalated' : 'ongoing';
         } catch (Throwable) {
             // Incident tracking must never break the snapshot cycle.
+            return 'disabled';
         }
+    }
+
+    protected function levelRank(string $level): int
+    {
+        return match ($level) {
+            'critical' => 2,
+            'warning' => 1,
+            default => 0,
+        };
     }
 
     /**
@@ -240,5 +289,10 @@ class AlertManager
     protected function cacheKey(string $key): string
     {
         return 'vigilance:alert:'.$key;
+    }
+
+    protected function renotifyKey(string $key): string
+    {
+        return 'vigilance:alert:renotify:'.$key;
     }
 }
