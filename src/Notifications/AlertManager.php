@@ -15,6 +15,7 @@ use Vigilance\Notifications\Rules\ExceptionSpikeRule;
 use Vigilance\Notifications\Rules\IssueRegressionRule;
 use Vigilance\Notifications\Rules\NewIssueRule;
 use Vigilance\Notifications\Rules\QueueLongWaitRule;
+use Vigilance\Notifications\Rules\ReleaseHealthRule;
 use Vigilance\Notifications\Rules\ScheduledTaskLateRule;
 use Vigilance\Notifications\Rules\SloBurnRateRule;
 use Vigilance\Notifications\Rules\SlowRequestRateRule;
@@ -40,6 +41,7 @@ class AlertManager
         NewIssueRule::class,
         IssueRegressionRule::class,
         AnomalyRule::class,
+        ReleaseHealthRule::class,
     ];
 
     public function __construct(protected Container $app) {}

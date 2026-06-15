@@ -14,6 +14,8 @@ use Illuminate\Support\Carbon;
  * @property ?string $message
  * @property int $occurrences
  * @property ?string $source
+ * @property ?string $first_release
+ * @property ?string $regressed_release
  * @property ?string $priority
  * @property ?string $assignee
  * @property ?Carbon $acknowledged_at

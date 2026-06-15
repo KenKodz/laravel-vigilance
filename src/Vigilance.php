@@ -186,6 +186,19 @@ class Vigilance
     }
 
     /**
+     * The current application release identifier — used to tag issues (first
+     * seen / regressed in) and deployment markers. Reads vigilance.release,
+     * falling back to app.version; null when neither is set.
+     */
+    public static function currentRelease(): ?string
+    {
+        $release = config('vigilance.release') ?? config('app.version');
+        $release = is_scalar($release) ? trim((string) $release) : '';
+
+        return $release !== '' ? $release : null;
+    }
+
+    /**
      * Increment a custom counter metric (e.g. signups, orders, checkouts).
      * Charted on the Custom Metrics dashboard. Never throws.
      */

@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Vigilance\Events\FailureRecorded;
 use Vigilance\Models\FailureGroup;
 use Vigilance\Support\FailureSignature;
+use Vigilance\Vigilance;
 
 /**
  * Fingerprints failures and upserts a FailureGroup so repeated occurrences of
@@ -32,6 +33,7 @@ class FailureGrouper
         $group = FailureGroup::query()->firstOrNew(['signature' => $signature]);
 
         $isNew = ! $group->exists;
+        $release = Vigilance::currentRelease();
 
         if (! $group->exists) {
             $group->type = $type;
@@ -40,6 +42,7 @@ class FailureGrouper
             $group->message = $message;
             $group->first_seen_at = $now;
             $group->occurrences = 0;
+            $group->first_release = $release;
         }
 
         $group->last_seen_at = $now;
@@ -58,10 +61,12 @@ class FailureGrouper
         }
 
         // Re-open a previously resolved group when it recurs, and mark it as a
-        // regression so the regression alert and the "regressed" badge fire.
+        // regression (with the release it came back in) so the regression alert
+        // and the "regressed" badge fire.
         if ($group->resolved_at !== null) {
             $group->resolved_at = null;
             $group->regressed_at = $now;
+            $group->regressed_release = $release;
         }
 
         $group->save();

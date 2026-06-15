@@ -73,6 +73,7 @@ use Vigilance\Http\Livewire\MetricDetail;
 use Vigilance\Http\Livewire\Metrics;
 use Vigilance\Http\Livewire\Overview;
 use Vigilance\Http\Livewire\Pending;
+use Vigilance\Http\Livewire\Releases;
 use Vigilance\Http\Livewire\Routes;
 use Vigilance\Http\Livewire\RunDetail;
 use Vigilance\Http\Livewire\Runs;
@@ -605,6 +606,7 @@ class VigilanceServiceProvider extends ServiceProvider
             'vigilance.vitals' => Vitals::class,
             'vigilance.slos' => Slos::class,
             'vigilance.incidents' => Incidents::class,
+            'vigilance.releases' => Releases::class,
             'vigilance.custom' => Custom::class,
             'vigilance.logs' => LogsPage::class,
             'vigilance.run-detail' => RunDetail::class,

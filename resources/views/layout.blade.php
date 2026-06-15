@@ -47,6 +47,7 @@
             'vigilance.metrics' => ['label' => 'Metrics', 'icon' => 'metrics'],
             'vigilance.custom' => ['label' => 'Custom', 'icon' => 'workload'],
             'vigilance.incidents' => ['label' => 'Incidents', 'icon' => 'failures'],
+            'vigilance.releases' => ['label' => 'Releases', 'icon' => 'dispatch'],
         ],
         'Control' => [
             'vigilance.dispatch' => ['label' => 'Dispatch', 'icon' => 'dispatch'],

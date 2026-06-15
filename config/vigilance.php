@@ -67,6 +67,10 @@ return [
         'driver' => 'database',
     ],
 
+    // The current release identifier — tags issues (first seen / regressed in)
+    // and deploy markers, and labels release health. Falls back to app.version.
+    'release' => env('VIGILANCE_RELEASE'),
+
     /*
     |--------------------------------------------------------------------------
     | Capture
@@ -417,6 +421,11 @@ return [
             'scheduled_task_late' => ['enabled' => true],
             'slo_burn' => ['enabled' => true, 'burn_rate' => 2.0],
 
+            // Fire a critical "bad deploy" alert when the latest deployment's
+            // health regresses (see "release_health" below). Point a generic
+            // webhook at it to trigger an automatic rollback.
+            'deploy_regression' => ['enabled' => true],
+
             // Alert the first time a new error type (signature) is seen, and when
             // a previously-resolved issue regresses. "window_minutes" defaults to
             // the throttle window; "limit" caps how many fire per snapshot.
@@ -443,6 +452,26 @@ return [
         'custom' => [
             // \App\Vigilance\Alerts\DiskSpaceRule::class,
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Release health (deploy-regression guard)
+    |--------------------------------------------------------------------------
+    |
+    | After each deployment marker (vigilance:deploy), Vigilance compares the
+    | request telemetry in the window after the deploy against the equal window
+    | before it — error rate, latency, throughput — to decide whether the release
+    | made things worse. A "regressed" verdict fires the "deploy_regression"
+    | alert above and is shown on the Releases dashboard page.
+    |
+    */
+
+    'release_health' => [
+        'window_minutes' => 30,       // compare 30m after the deploy vs 30m before
+        'min_requests' => 50,         // requests needed per window to judge
+        'error_rate_increase' => 5.0, // percentage-point jump → regressed
+        'latency_increase' => 0.5,    // +50% avg latency → regressed
     ],
 
     /*
