@@ -14,8 +14,18 @@ use Vigilance\Support\FailureSignature;
  */
 class FailureGrouper
 {
-    public function record(string $type, ?string $name, ?string $exceptionClass, ?string $message): int
-    {
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    public function record(
+        string $type,
+        ?string $name,
+        ?string $exceptionClass,
+        ?string $message,
+        ?string $source = null,
+        ?string $sample = null,
+        array $context = [],
+    ): int {
         $signature = FailureSignature::for($type, $name, $exceptionClass, $message);
         $now = Carbon::now();
 
@@ -34,6 +44,18 @@ class FailureGrouper
 
         $group->last_seen_at = $now;
         $group->occurrences = (int) $group->occurrences + 1;
+        $group->source = $source ?? $group->source ?? $type;
+
+        // Keep the latest stack-trace sample / request context on the group so
+        // the issue detail has something to show even for request errors (which
+        // have no captured run row).
+        if ($sample !== null) {
+            $group->sample = $sample;
+        }
+
+        if ($context !== []) {
+            $group->context = $context;
+        }
 
         // Re-open a previously resolved group when it recurs.
         if ($group->resolved_at !== null) {

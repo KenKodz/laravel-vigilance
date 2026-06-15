@@ -310,6 +310,33 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Issues (error tracking)
+    |--------------------------------------------------------------------------
+    |
+    | Every reported exception — HTTP request errors and Vigilance::report()
+    | surfaced exceptions — is grouped (Sentry-style fingerprint) into the
+    | Issues inbox with a stack-trace sample and request context. Queue/command
+    | failures are grouped automatically by the run capture. Set "sample_rate"
+    | below 1.0 only for extreme exception volume; failures you care about are
+    | usually worth keeping in full. "capture_request_input" is off by default
+    | for privacy (input is redacted when on).
+    |
+    */
+
+    'issues' => [
+        'enabled' => true,
+        'sample_rate' => (float) env('VIGILANCE_ISSUES_SAMPLE', 1.0),
+        'capture_request_input' => (bool) env('VIGILANCE_ISSUES_CAPTURE_INPUT', false),
+        'max_sample' => 8000,
+        'except' => [
+            // \Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class,
+            // \Illuminate\Auth\AuthenticationException::class,
+            // \Illuminate\Validation\ValidationException::class,
+        ],
+    ],
+
     'alerts' => [
         'enabled' => true,
         'throttle_minutes' => 15,

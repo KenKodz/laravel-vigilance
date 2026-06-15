@@ -8,6 +8,7 @@ use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\AboutCommand;
@@ -34,6 +35,7 @@ use Vigilance\Apm\Ingests\RedisIngest;
 use Vigilance\Apm\Ingests\StorageIngest;
 use Vigilance\Apm\Storage\DatabaseStorage;
 use Vigilance\Capture\CommandCapture;
+use Vigilance\Capture\IssueCapture;
 use Vigilance\Capture\JobCapture;
 use Vigilance\Capture\Recorder;
 use Vigilance\Capture\ScheduleCapture;
@@ -53,6 +55,7 @@ use Vigilance\Console\TerminateCommand;
 use Vigilance\Contracts\MetricsRepository;
 use Vigilance\Contracts\RunRepository;
 use Vigilance\Control\ControlGate;
+use Vigilance\Events\ExceptionReported;
 use Vigilance\Http\Controllers\AssetController;
 use Vigilance\Http\Livewire\Apm as ApmPage;
 use Vigilance\Http\Livewire\ApmCard;
@@ -195,6 +198,10 @@ class VigilanceServiceProvider extends ServiceProvider
 
         if (config('vigilance.enabled', true)) {
             $this->registerCapture();
+
+            if (config('vigilance.issues.enabled', true)) {
+                $this->registerIssueCapture();
+            }
         }
 
         $this->registerAssets();
@@ -205,6 +212,28 @@ class VigilanceServiceProvider extends ServiceProvider
         $this->registerStateReset();
         $this->bootApm();
         $this->bootTracing();
+    }
+
+    /**
+     * Route HTTP-request and manually-reported exceptions into the unified
+     * Issues inbox. Queue/command failures are grouped by the run capture, so
+     * we only cover the layers it doesn't (avoiding double counting).
+     */
+    protected function registerIssueCapture(): void
+    {
+        $capture = $this->app->make(IssueCapture::class);
+
+        $this->app->make(ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use ($capture) {
+                if (! $this->app->runningInConsole()) {
+                    $capture->capture($e, 'request');
+                }
+            });
+
+        $this->app->make('events')->listen(
+            ExceptionReported::class,
+            fn ($event) => $capture->capture($event->exception, 'reported'),
+        );
     }
 
     protected function bootTracing(): void
