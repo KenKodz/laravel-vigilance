@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
+use Vigilance\Models\Incident;
 use Vigilance\Notifications\Contracts\AlertRule;
 use Vigilance\Notifications\Rules\ErrorRateRule;
 use Vigilance\Notifications\Rules\ExceptionSpikeRule;
@@ -53,6 +54,10 @@ class AlertManager
         foreach ($this->rules() as $rule) {
             try {
                 foreach ($rule->evaluate() as $alert) {
+                    // Track the incident on every tick the condition holds…
+                    $this->recordIncident($alert);
+
+                    // …but only notify once per throttle window.
                     if (Cache::has($this->cacheKey($alert->key))) {
                         continue;
                     }
@@ -66,7 +71,71 @@ class AlertManager
             }
         }
 
+        $this->autoResolveIncidents($throttle);
+
         return $sent;
+    }
+
+    /**
+     * Open an incident for the alert, or refresh an already-open one. Tracks
+     * occurrences and last-seen so it can auto-resolve when the alert stops.
+     */
+    protected function recordIncident(Alert $alert): void
+    {
+        if (! config('vigilance.alerts.incidents', true)) {
+            return;
+        }
+
+        try {
+            $incident = Incident::query()->where('key', $alert->key)->whereNull('resolved_at')->first();
+
+            if ($incident === null) {
+                Incident::query()->create([
+                    'key' => $alert->key,
+                    'title' => $alert->title,
+                    'message' => $alert->message,
+                    'level' => $alert->level,
+                    'status' => 'open',
+                    'occurrences' => 1,
+                    'opened_at' => now(),
+                    'last_seen_at' => now(),
+                ]);
+
+                return;
+            }
+
+            $incident->update([
+                'occurrences' => $incident->occurrences + 1,
+                'last_seen_at' => now(),
+                'message' => $alert->message,
+                'level' => $alert->level,
+            ]);
+        } catch (Throwable) {
+            // Incident tracking must never break the snapshot cycle.
+        }
+    }
+
+    /**
+     * Resolve open incidents whose alert hasn't recurred for several throttle
+     * windows (the condition has cleared).
+     */
+    protected function autoResolveIncidents(int $throttle): void
+    {
+        if (! config('vigilance.alerts.incidents', true)) {
+            return;
+        }
+
+        try {
+            $multiplier = max(2, (int) config('vigilance.alerts.incident_resolve_after', 3));
+            $cutoff = now()->subMinutes(max(1, $throttle) * $multiplier);
+
+            Incident::query()
+                ->whereNull('resolved_at')
+                ->where('last_seen_at', '<', $cutoff)
+                ->update(['status' => 'resolved', 'resolved_at' => now()]);
+        } catch (Throwable) {
+            //
+        }
     }
 
     /**

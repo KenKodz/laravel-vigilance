@@ -383,6 +383,11 @@ return [
         'enabled' => true,
         'throttle_minutes' => 15,
 
+        // Persist fired alerts as incidents (open until the alert stops recurring
+        // for "incident_resolve_after" throttle windows), tracking MTTR.
+        'incidents' => true,
+        'incident_resolve_after' => 3,
+
         'rules' => [
             'queue_long_wait' => ['enabled' => true, 'seconds' => (int) env('VIGILANCE_LONG_WAIT_SECONDS', 60)],
             'error_rate' => ['enabled' => true, 'min_runs' => 20, 'percent' => 20],

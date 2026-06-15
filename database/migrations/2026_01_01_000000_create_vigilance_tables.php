@@ -87,6 +87,20 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        $schema->create('vigilance_incidents', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('key')->index();
+            $table->string('title');
+            $table->text('message')->nullable();
+            $table->string('level', 16)->default('warning');
+            $table->string('status', 16)->default('open')->index();
+            $table->unsignedBigInteger('occurrences')->default(1);
+            $table->timestamp('opened_at')->index();
+            $table->timestamp('last_seen_at')->nullable();
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamps();
+        });
+
         $schema->create('vigilance_metric_snapshots', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('scope_type', 16);
@@ -276,6 +290,7 @@ return new class extends Migration
         $schema->dropIfExists('vigilance_audit');
         $schema->dropIfExists('vigilance_scheduled_tasks');
         $schema->dropIfExists('vigilance_metric_snapshots');
+        $schema->dropIfExists('vigilance_incidents');
         $schema->dropIfExists('vigilance_failure_groups');
         $schema->dropIfExists('vigilance_run_tags');
         $schema->dropIfExists('vigilance_runs');
