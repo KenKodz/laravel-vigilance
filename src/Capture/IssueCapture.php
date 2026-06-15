@@ -4,6 +4,7 @@ namespace Vigilance\Capture;
 
 use Illuminate\Support\Str;
 use Throwable;
+use Vigilance\Support\PathMatcher;
 use Vigilance\Support\Redactor;
 use Vigilance\Vigilance;
 
@@ -27,7 +28,7 @@ class IssueCapture
         try {
             $class = $e::class;
 
-            if ($this->shouldIgnore($class) || ! $this->shouldSample()) {
+            if ($this->shouldIgnore($class) || ! $this->shouldSample() || $this->onIgnoredPath($source)) {
                 return;
             }
 
@@ -43,6 +44,20 @@ class IssueCapture
         } catch (Throwable) {
             // Capturing an issue must never break the application.
         }
+    }
+
+    /**
+     * Drop web-request errors raised on a globally-ignored path (admin panels,
+     * etc.). Job/command/reported errors aren't path-based, so they're never
+     * affected.
+     */
+    protected function onIgnoredPath(string $source): bool
+    {
+        if ($source !== 'request' || app()->runningInConsole()) {
+            return false;
+        }
+
+        return PathMatcher::ignored('/'.ltrim(request()->path(), '/'));
     }
 
     protected function shouldIgnore(string $class): bool

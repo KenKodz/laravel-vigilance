@@ -5,6 +5,7 @@ namespace Vigilance\Tracing\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Vigilance\Support\PathMatcher;
 use Vigilance\Tracing\Tracer;
 
 /**
@@ -54,6 +55,10 @@ class TraceRequests
         }
 
         $path = '/'.ltrim($request->path(), '/');
+
+        if (PathMatcher::ignored($path)) {
+            return false;
+        }
 
         foreach ((array) $this->tracer->container()->make('config')->get('vigilance.tracing.ignore', []) as $pattern) {
             if (@preg_match((string) $pattern, $path) === 1) {

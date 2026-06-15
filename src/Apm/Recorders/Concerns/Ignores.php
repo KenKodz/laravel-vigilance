@@ -2,10 +2,13 @@
 
 namespace Vigilance\Apm\Recorders\Concerns;
 
+use Vigilance\Support\PathMatcher;
+
 trait Ignores
 {
     /**
-     * Whether $key matches any configured ignore regex.
+     * Whether $key matches this recorder's ignore regexes or the global
+     * vigilance.ignore_paths list (admin panels, Livewire, …).
      */
     protected function shouldIgnore(string $key): bool
     {
@@ -15,6 +18,6 @@ trait Ignores
             }
         }
 
-        return false;
+        return PathMatcher::ignored($key);
     }
 }

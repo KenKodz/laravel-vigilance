@@ -134,6 +134,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Globally ignored paths
+    |--------------------------------------------------------------------------
+    |
+    | Request paths listed here are excluded from ALL request-level telemetry at
+    | once — APM (slow requests + per-route metrics), tracing, Real User
+    | Monitoring, and web-request error capture. Use it for endpoints you don't
+    | care to monitor: an admin panel, a package's routes, health checks, etc.
+    | Each entry is a wildcard ("/admin/*", "livewire-*") or a delimited regex
+    | ("#^/internal/#"). The dashboard, Livewire and Telescope/Horizon are
+    | already excluded by the per-recorder defaults.
+    |
+    */
+
+    'ignore_paths' => [
+        // '/admin/*',
+        // '/livewire/*',
+        // '/up',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Manual control (dispatch jobs / run commands from the dashboard)
     |--------------------------------------------------------------------------
     |

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vigilance\Apm\Apm;
 use Vigilance\Capture\FailureGrouper;
+use Vigilance\Support\PathMatcher;
 
 /**
  * Public (unauthenticated, throttled) ingest endpoint for Real User Monitoring
@@ -25,6 +26,11 @@ class RumController
         abort_unless((bool) config('vigilance.rum.enabled', false), 404);
 
         $page = $this->normalizePage((string) $request->input('page', '/'));
+
+        // Pages on the global ignore list (admin panels, etc.) are dropped here.
+        if (PathMatcher::ignored($page)) {
+            return response()->noContent();
+        }
 
         $metrics = $request->input('metrics', []);
 
