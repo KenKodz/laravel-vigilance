@@ -3,6 +3,7 @@
 use Carbon\CarbonInterval;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vigilance\Apm\Apm;
 use Vigilance\Apm\Contracts\Storage;
@@ -49,6 +50,18 @@ it('404s when RUM is disabled', function () {
 
     callRum(['page' => '/x', 'metrics' => [['name' => 'lcp', 'value' => 100]]]);
 })->throws(NotFoundHttpException::class);
+
+it('emits the beacon via the @vigilanceRum directive only when enabled', function () {
+    config()->set('vigilance.rum.enabled', true);
+
+    $html = Blade::render('@vigilanceRum');
+
+    expect($html)->toContain('sendBeacon')->toContain('__vigilanceRumEndpoint');
+
+    config()->set('vigilance.rum.enabled', false);
+
+    expect(trim(Blade::render('@vigilanceRum')))->toBe('');
+});
 
 it('ignores unknown metric names and out-of-range values', function () {
     config()->set('vigilance.rum.enabled', true);

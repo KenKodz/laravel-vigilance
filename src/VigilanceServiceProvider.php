@@ -21,6 +21,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\Looping;
 use Illuminate\Queue\Events\WorkerStopping;
 use Illuminate\Redis\Events\CommandExecuted;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -198,6 +199,13 @@ class VigilanceServiceProvider extends ServiceProvider
         // works with zero configuration.
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'vigilance');
+
+        // @vigilanceRum — host apps drop this in their layout <head> to emit the
+        // RUM beacon (renders nothing unless vigilance.rum.enabled is true).
+        Blade::directive(
+            'vigilanceRum',
+            static fn (): string => "<?php echo view('vigilance::rum')->render(); ?>",
+        );
 
         if (config('vigilance.enabled', true)) {
             $this->registerCapture();
