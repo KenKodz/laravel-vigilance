@@ -37,6 +37,7 @@ body {
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
+    overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     /* Subtle emerald glow behind the hero + faint grid. */
@@ -153,6 +154,9 @@ code.inline { font-family: var(--mono); font-size: .9em; background: var(--surfa
 
 /* --- Split feature (text + code) ------------------------------------------ */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+/* Let grid items shrink below their content width so inner code blocks scroll
+   internally instead of stretching the page (CSS Grid min-width:auto trap). */
+.split > * { min-width: 0; }
 .split + .split { margin-top: 64px; }
 .split__text h3 { font-size: clamp(24px, 3vw, 30px); font-weight: 800; margin-top: 14px; }
 .split__text p { color: var(--muted); font-size: 16px; margin-top: 14px; }
