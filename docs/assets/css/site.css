@@ -13,7 +13,7 @@
     --text: #e4e4e7;
     --strong: #fafafa;
     --muted: #a1a1aa;
-    --faint: #71717a;
+    --faint: #888891;
     --accent: #10b981;
     --accent-strong: #34d399;
     --accent-soft: rgba(16, 185, 129, 0.12);
@@ -63,7 +63,14 @@ h1, h2, h3 { color: var(--strong); line-height: 1.15; letter-spacing: -0.022em; 
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border: 3px solid transparent; border-radius: 8px; background-clip: content-box; }
 ::-webkit-scrollbar-thumb:hover { background: var(--faint); background-clip: content-box; }
 
-.wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+.wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+
+/* --- A11y utilities ------------------------------------------------------- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.skip { position: fixed; left: 12px; top: -80px; z-index: 100; background: var(--accent-strong); color: #04140c; font-weight: 700; padding: 11px 18px; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.5); transition: top .18s ease; }
+.skip:focus { top: 12px; text-decoration: none; outline-offset: 2px; }
+main:focus { outline: none; }
+main:focus-visible { outline: none; }
 
 /* --- Nav ------------------------------------------------------------------ */
 .nav {
@@ -119,9 +126,13 @@ h1, h2, h3 { color: var(--strong); line-height: 1.15; letter-spacing: -0.022em; 
 pre.code { margin: 0; padding: 18px 20px; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; overflow-x: auto; background: #0a0a0d; border: 1px solid var(--border); border-radius: 12px; color: var(--text); }
 code.inline { font-family: var(--mono); font-size: .9em; background: var(--surface-2); padding: 2px 7px; border-radius: 6px; color: var(--accent-strong); }
 .copy { position: relative; }
-.copy__btn { position: absolute; top: 10px; right: 10px; font-size: 11px; font-family: var(--mono); color: var(--muted); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 7px; padding: 4px 9px; cursor: pointer; opacity: 0; transition: opacity .15s; }
-.copy:hover .copy__btn { opacity: 1; }
+.copy__btn { position: absolute; top: 8px; right: 8px; font-size: 11px; font-family: var(--mono); color: var(--muted); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 7px; padding: 6px 11px; min-height: 32px; cursor: pointer; opacity: 0; transition: opacity .15s, color .15s; touch-action: manipulation; }
+.copy:hover .copy__btn,
+.copy:focus-within .copy__btn,
+.copy__btn:focus-visible { opacity: 1; }
 .copy__btn:hover { color: var(--strong); }
+/* Touch devices have no hover — keep the copy control visible. */
+@media (hover: none) { .copy__btn { opacity: 1; } }
 .tok-c { color: var(--faint); } .tok-k { color: var(--violet); } .tok-s { color: var(--accent-strong); } .tok-v { color: var(--sky); } .tok-f { color: var(--amber); }
 
 /* --- Sections ------------------------------------------------------------- */
@@ -167,7 +178,7 @@ table.cmp td.vig { color: var(--strong); font-weight: 600; }
 
 /* --- Commands ------------------------------------------------------------- */
 .cmd-group { margin-top: 30px; }
-.cmd-group > h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent-strong); margin: 0 0 12px; }
+.cmd-group > h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--accent-strong); margin: 0 0 12px; }
 .cmd { display: grid; grid-template-columns: 230px 1fr; gap: 16px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin-bottom: 8px; align-items: baseline; }
 .cmd code { font-family: var(--mono); font-size: 13px; color: var(--accent-strong); }
 .cmd span { color: var(--muted); font-size: 14px; }
@@ -180,7 +191,7 @@ table.cmp td.vig { color: var(--strong); font-weight: 600; }
 /* --- Footer --------------------------------------------------------------- */
 .footer { border-top: 1px solid var(--border); padding: 48px 0 64px; margin-top: 40px; }
 .footer__grid { display: flex; flex-wrap: wrap; gap: 40px; justify-content: space-between; }
-.footer__col h5 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin: 0 0 14px; }
+.footer__col h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin: 0 0 14px; }
 .footer__col a { display: block; color: var(--muted); font-size: 14px; padding: 4px 0; }
 .footer__col a:hover { color: var(--strong); }
 .footer__bottom { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; color: var(--faint); font-size: 13px; }
@@ -216,7 +227,7 @@ table.cmp td.vig { color: var(--strong); font-weight: 600; }
 
 .app__main { padding: 22px 24px; overflow: hidden; }
 .app__head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-.app__head h4 { font-size: 18px; font-weight: 700; color: var(--strong); margin: 0; }
+.app__head .app__title { display: block; font-size: 18px; font-weight: 700; color: var(--strong); }
 .app__head span { font-size: 12px; color: var(--faint); }
 .app__live { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; color: var(--accent-strong); background: var(--accent-soft); border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 999px; }
 .app__live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); animation: pulse 2.4s ease-in-out infinite; }
