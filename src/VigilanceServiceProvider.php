@@ -68,6 +68,7 @@ use Vigilance\Http\Livewire\Dispatcher;
 use Vigilance\Http\Livewire\Failures;
 use Vigilance\Http\Livewire\Incidents;
 use Vigilance\Http\Livewire\IssueDetail;
+use Vigilance\Http\Livewire\Logs as LogsPage;
 use Vigilance\Http\Livewire\MetricDetail;
 use Vigilance\Http\Livewire\Metrics;
 use Vigilance\Http\Livewire\Overview;
@@ -84,6 +85,9 @@ use Vigilance\Http\Livewire\Vitals;
 use Vigilance\Http\Livewire\Workers;
 use Vigilance\Http\Livewire\Workload;
 use Vigilance\Http\Middleware\Authorize;
+use Vigilance\Logs\Contracts\LogStorage;
+use Vigilance\Logs\LogCollector;
+use Vigilance\Logs\Storage\DatabaseLogStorage;
 use Vigilance\Storage\DatabaseMetricsRepository;
 use Vigilance\Storage\DatabaseRunRepository;
 use Vigilance\Tracing\Contracts\TraceStorage;
@@ -103,6 +107,13 @@ class VigilanceServiceProvider extends ServiceProvider
         $this->app->singleton(Recorder::class);
 
         $this->registerApm();
+        $this->registerLogs();
+    }
+
+    protected function registerLogs(): void
+    {
+        $this->app->singleton(LogStorage::class, DatabaseLogStorage::class);
+        $this->app->singleton(LogCollector::class, fn ($app) => new LogCollector($app));
     }
 
     protected function registerApm(): void
@@ -228,6 +239,49 @@ class VigilanceServiceProvider extends ServiceProvider
         $this->registerStateReset();
         $this->bootApm();
         $this->bootTracing();
+        $this->bootLogs();
+    }
+
+    /**
+     * Capture application logs into the searchable explorer, correlated to the
+     * in-flight trace. Buffered in memory and flushed AFTER the response is sent
+     * (same posture as APM), so log capture adds no request latency. Off by
+     * default — it writes a row per qualifying log line.
+     */
+    protected function bootLogs(): void
+    {
+        if (! config('vigilance.logs.enabled', false)) {
+            return;
+        }
+
+        $collector = $this->app->make(LogCollector::class);
+        $collector->register();
+
+        if ($this->app->runningInConsole()) {
+            $this->app->make(Kernel::class)
+                ->whenCommandLifecycleIsLongerThan(-1, fn () => $collector->flush());
+        } else {
+            $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
+                ->whenRequestLifecycleIsLongerThan(-1, fn () => $collector->flush());
+        }
+
+        $events = $this->app->make('events');
+        $events->listen(Looping::class, fn () => $collector->flush());
+        $events->listen(WorkerStopping::class, fn () => $collector->flush());
+
+        // Octane: rebind to the request sandbox and drop any buffered logs.
+        if (class_exists('Laravel\Octane\Events\RequestReceived')) {
+            foreach ([
+                'Laravel\Octane\Events\RequestReceived',
+                'Laravel\Octane\Events\TaskReceived',
+                'Laravel\Octane\Events\TickReceived',
+            ] as $event) {
+                $events->listen($event, function ($e) use ($collector) {
+                    $collector->setContainer($e->sandbox);
+                    $collector->discard();
+                });
+            }
+        }
     }
 
     /**
@@ -552,6 +606,7 @@ class VigilanceServiceProvider extends ServiceProvider
             'vigilance.slos' => Slos::class,
             'vigilance.incidents' => Incidents::class,
             'vigilance.custom' => Custom::class,
+            'vigilance.logs' => LogsPage::class,
             'vigilance.run-detail' => RunDetail::class,
             'vigilance.failures' => Failures::class,
             'vigilance.issue-detail' => IssueDetail::class,

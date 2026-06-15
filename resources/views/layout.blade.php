@@ -54,6 +54,11 @@
         ],
     ];
 
+    // The log explorer only appears when log capture is enabled.
+    if (config('vigilance.logs.enabled', false)) {
+        $groups['Performance']['vigilance.logs'] = ['label' => 'Logs', 'icon' => 'logs'];
+    }
+
     // Web Vitals only appears when RUM is collecting frontend data.
     if (config('vigilance.rum.enabled', false)) {
         $groups['Performance']['vigilance.vitals'] = ['label' => 'Web Vitals', 'icon' => 'metrics'];

@@ -261,6 +261,22 @@ return new class extends Migration
             $table->json('attributes')->nullable();
         });
 
+        // ---- Log explorer (searchable app logs, correlated to traces) ----
+
+        $schema->create('vigilance_logs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('level', 16)->index();
+            $table->unsignedSmallInteger('level_value')->index();
+            $table->text('message');
+            $table->longText('context')->nullable();
+            $table->string('channel')->nullable()->index();
+            $table->string('trace_id', 36)->nullable()->index();
+            $table->unsignedInteger('logged_at')->index();
+            $table->timestamp('created_at')->nullable();
+
+            $table->index(['level_value', 'logged_at']);
+        });
+
         // ---- Deployment markers (correlate metrics/errors to a release) ----
 
         $schema->create('vigilance_deployments', function (Blueprint $table) {
@@ -279,6 +295,7 @@ return new class extends Migration
         $schema = Schema::connection($this->connection());
 
         $schema->dropIfExists('vigilance_deployments');
+        $schema->dropIfExists('vigilance_logs');
         $schema->dropIfExists('vigilance_spans');
         $schema->dropIfExists('vigilance_traces');
         $schema->dropIfExists('vigilance_aggregates');

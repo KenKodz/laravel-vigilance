@@ -130,4 +130,33 @@
             </ul>
         @endif
     </div>
+
+    {{-- Correlated logs --}}
+    @php
+        $logLevelPill = fn (int $v): string => match (true) {
+            $v >= 400 => 'is-danger',
+            $v >= 300 => 'is-warn',
+            $v >= 250 => 'is-info',
+            default => 'is-neutral',
+        };
+    @endphp
+    @if (count($logs) > 0)
+        <div class="v-card overflow-hidden">
+            <div class="v-card__header">
+                <h2 class="v-card__title">Logs <span class="v-faint">({{ count($logs) }})</span></h2>
+                <a href="{{ route('vigilance.logs', ['trace' => $trace->id]) }}" class="text-xs v-link">open in explorer &rarr;</a>
+            </div>
+            <ul class="divide-y" style="border-color: var(--v-border);">
+                @foreach ($logs as $log)
+                    <li class="flex items-start gap-3 px-4 py-2">
+                        <span @class(['v-pill shrink-0', $logLevelPill($log->levelValue)])>{{ $log->level }}</span>
+                        <span class="min-w-0 flex-1 font-mono text-[12px] v-muted">{{ \Illuminate\Support\Str::limit($log->message, 200) }}</span>
+                        <span class="shrink-0 font-mono text-[11px] v-faint" title="{{ \Carbon\CarbonImmutable::createFromTimestamp($log->loggedAt)->toDateTimeString() }}">
+                            {{ \Carbon\CarbonImmutable::createFromTimestamp($log->loggedAt)->format('H:i:s') }}
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 </div>

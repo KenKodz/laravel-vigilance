@@ -678,6 +678,49 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Log explorer (searchable app logs, correlated to traces)
+    |--------------------------------------------------------------------------
+    |
+    | Captures application log records (Log::info(), Log::error(), …) into a
+    | searchable explorer and correlates each line to the in-flight trace, so
+    | you can pivot from a slow or failed trace straight to the logs it emitted.
+    | OFF by default — it writes a row per qualifying log line. Like tracing, it
+    | is engineered to stay cheap: records are buffered in memory and flushed in
+    | one batched insert AFTER the response is sent (zero request latency).
+    |
+    |  - "level" is the minimum severity captured (debug < info < notice <
+    |    warning < error < critical < alert < emergency). Raise it to "warning"
+    |    or "error" to keep only the lines worth keeping at high volume.
+    |  - "sample_rate" (0.0-1.0) keeps a fraction of qualifying lines.
+    |  - "ignore" is a list of regexes matched against the message.
+    |  - Point "storage.connection" at a dedicated connection to keep log writes
+    |    off your primary database.
+    |
+    */
+
+    'logs' => [
+        'enabled' => (bool) env('VIGILANCE_LOGS', false),
+
+        'level' => env('VIGILANCE_LOGS_LEVEL', 'debug'),
+
+        'sample_rate' => (float) env('VIGILANCE_LOGS_SAMPLE', 1.0),
+
+        // Regexes matched against the log message; matches are never recorded.
+        'ignore' => [
+            // '#^Telescope#',
+        ],
+
+        'max_message_length' => 8000,
+        'max_context_length' => 8000,
+
+        // Max records buffered in a single request before a flush is forced.
+        'max_buffer' => 500,
+
+        'retention' => env('VIGILANCE_LOGS_RETENTION', '72 hours'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Worker supervision (the "vigilance:supervise" runtime)
     |--------------------------------------------------------------------------
     |

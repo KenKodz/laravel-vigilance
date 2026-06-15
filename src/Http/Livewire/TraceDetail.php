@@ -3,11 +3,12 @@
 namespace Vigilance\Http\Livewire;
 
 use Livewire\Component;
+use Vigilance\Logs\Contracts\LogStorage;
 use Vigilance\Tracing\Contracts\TraceStorage;
 
 /**
  * A single trace's waterfall: every span laid out on a timeline relative to the
- * trace duration.
+ * trace duration, plus the application logs emitted inside it.
  */
 class TraceDetail extends Component
 {
@@ -26,6 +27,7 @@ class TraceDetail extends Component
 
         return view('vigilance::pages.trace-detail', [
             'trace' => $trace,
+            'logs' => app(LogStorage::class)->forTrace($this->traceId),
         ])->layout('vigilance::layout', ['title' => 'Trace']);
     }
 }

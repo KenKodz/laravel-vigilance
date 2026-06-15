@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Vigilance\Apm\Contracts\Storage as ApmStorage;
 use Vigilance\Contracts\MetricsRepository;
 use Vigilance\Enums\RunStatus;
+use Vigilance\Logs\Contracts\LogStorage;
 use Vigilance\Models\AuditEntry;
 use Vigilance\Models\FailureGroup;
 use Vigilance\Models\Run;
@@ -74,6 +75,11 @@ class PruneCommand extends Command
         // …and the tracing tables (traces / spans), which keep a short window.
         if (config('vigilance.tracing.enabled', false)) {
             app(TraceStorage::class)->trim();
+        }
+
+        // …and the captured application logs, which keep a short window too.
+        if (config('vigilance.logs.enabled', false)) {
+            app(LogStorage::class)->trim();
         }
 
         $this->info("Pruned {$deletedNonFailed} run(s) and {$deletedFailed} failed run(s).");
