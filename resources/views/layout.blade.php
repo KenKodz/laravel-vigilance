@@ -45,6 +45,7 @@
             'vigilance.routes'  => ['label' => 'Routes',  'icon' => 'workload'],
             'vigilance.traces'  => ['label' => 'Traces',  'icon' => 'traces'],
             'vigilance.metrics' => ['label' => 'Metrics', 'icon' => 'metrics'],
+            'vigilance.incidents' => ['label' => 'Incidents', 'icon' => 'failures'],
         ],
         'Control' => [
             'vigilance.dispatch' => ['label' => 'Dispatch', 'icon' => 'dispatch'],

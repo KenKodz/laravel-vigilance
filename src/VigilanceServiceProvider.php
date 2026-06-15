@@ -65,6 +65,7 @@ use Vigilance\Http\Livewire\Batches;
 use Vigilance\Http\Livewire\CommandRunner;
 use Vigilance\Http\Livewire\Dispatcher;
 use Vigilance\Http\Livewire\Failures;
+use Vigilance\Http\Livewire\Incidents;
 use Vigilance\Http\Livewire\IssueDetail;
 use Vigilance\Http\Livewire\MetricDetail;
 use Vigilance\Http\Livewire\Metrics;
@@ -548,6 +549,7 @@ class VigilanceServiceProvider extends ServiceProvider
             'vigilance.routes' => Routes::class,
             'vigilance.vitals' => Vitals::class,
             'vigilance.slos' => Slos::class,
+            'vigilance.incidents' => Incidents::class,
             'vigilance.run-detail' => RunDetail::class,
             'vigilance.failures' => Failures::class,
             'vigilance.issue-detail' => IssueDetail::class,
