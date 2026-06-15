@@ -320,6 +320,11 @@ composer install
 ./vendor/bin/pest
 ```
 
+CI runs the suite against **SQLite, PostgreSQL 16 and MySQL/MariaDB 11.4** (the
+storage layer's per-driver SQL — generated key-hash columns, upserts, LIKE
+escaping — is exercised on each). Point the suite at a real engine locally with
+`VIGILANCE_TEST_DB=pgsql` (or `mysql`) plus the usual `DB_*` env vars.
+
 ## License
 
 MIT.

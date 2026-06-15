@@ -6,6 +6,35 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-06-16
+
+Cross-database hardening — the full suite now runs against SQLite, PostgreSQL
+and MySQL/MariaDB (previously SQLite-only in CI), which surfaced and fixed real
+bugs the other engines hit.
+
+### Fixed
+- **MySQL / MariaDB install was broken (critical).** The `vigilance_aggregates`
+  unique index auto-named to 65 characters — over MySQL/MariaDB's 64-char
+  identifier limit (error 1059) — so migrations failed and the package could not
+  be installed on MySQL/MariaDB at all. Named it (and the 4-column index)
+  explicitly. PostgreSQL truncated silently; SQLite has no limit; which is why
+  the SQLite-only CI never caught it.
+- **PostgreSQL: float into bigint.** `wait_ms` / `duration_ms` wrote Carbon-3
+  float millisecond values into `bigint` columns, which PostgreSQL rejects
+  (MySQL/SQLite silently truncate). Now cast to int.
+- **Cross-driver LIKE filters.** The silenced-jobs filter and name/message
+  searches used `LIKE` with class names whose backslashes are escape characters
+  on PostgreSQL and MySQL (not SQLite), so they silently failed there. New `Like`
+  helper builds patterns with an explicit `ESCAPE` clause.
+- **Queue-depth probe.** A missing `jobs` table threw, and on PostgreSQL a thrown
+  query inside a transaction aborts the whole transaction (defeating the
+  never-break-the-app guard). It now checks the table exists first.
+
+### Changed
+- CI runs the suite against **PostgreSQL 16** and **MariaDB 11.4** services in
+  addition to SQLite. The test suite is connection-configurable via
+  `VIGILANCE_TEST_DB`. Validated green on all three engines (234 tests each).
+
 ## [0.5.2] - 2026-06-15
 
 ### Changed
