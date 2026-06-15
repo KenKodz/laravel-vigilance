@@ -37,7 +37,7 @@ Route::get('/traces', Traces::class)->name('traces');
 Route::get('/traces/{trace}', TraceDetail::class)->name('traces.show');
 Route::get('/runs', Runs::class)->name('runs');
 Route::get('/runs/{run}', RunDetail::class)->name('runs.show');
-Route::get('/failures', Failures::class)->name('failures');
+Route::get('/issues', Failures::class)->name('issues');
 Route::get('/tags', Tags::class)->name('tags');
 Route::get('/dispatch', Dispatcher::class)->name('dispatch');
 Route::get('/commands', CommandRunner::class)->name('commands');

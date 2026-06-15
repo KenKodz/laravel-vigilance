@@ -22,10 +22,33 @@ class Failures extends Component
     #[Url(as: 'tab')]
     public string $tab = 'open';
 
+    #[Url(as: 'source')]
+    public string $source = '';
+
     public function setTab(string $tab): void
     {
         $this->tab = in_array($tab, ['open', 'resolved', 'all'], true) ? $tab : 'open';
         $this->resetPage();
+    }
+
+    public function setSource(string $source): void
+    {
+        $this->source = in_array($source, ['request', 'reported', 'job', 'command', 'scheduled'], true) ? $source : '';
+        $this->resetPage();
+    }
+
+    public function mute(int $id, int $hours = 24): void
+    {
+        FailureGroup::query()->whereKey($id)->update(['muted_until' => now()->addHours($hours)]);
+
+        $this->flash('Issue muted for '.$hours.'h.');
+    }
+
+    public function unmute(int $id): void
+    {
+        FailureGroup::query()->whereKey($id)->update(['muted_until' => null]);
+
+        $this->flash('Issue unmuted.');
     }
 
     public function resolve(int $id): void
@@ -91,6 +114,7 @@ class Failures extends Component
         $groups = FailureGroup::query()
             ->when($this->tab === 'open', fn ($query) => $query->whereNull('resolved_at'))
             ->when($this->tab === 'resolved', fn ($query) => $query->whereNotNull('resolved_at'))
+            ->when($this->source !== '', fn ($query) => $query->where('source', $this->source))
             ->orderByDesc('last_seen_at')
             ->orderByDesc('id')
             ->paginate(20);
@@ -100,7 +124,7 @@ class Failures extends Component
         return view('vigilance::pages.failures', [
             'groups' => $groups,
             'sparklines' => $sparklines,
-        ])->layout('vigilance::layout', ['title' => 'Failures']);
+        ])->layout('vigilance::layout', ['title' => 'Issues']);
     }
 
     /**

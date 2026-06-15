@@ -52,6 +52,28 @@ it('clamps an invalid priority to normal', function () {
     expect($group->refresh()->priority)->toBe('normal');
 });
 
+it('mutes and unmutes an issue', function () {
+    $group = makeFailureGroup();
+
+    Livewire::test(Failures::class)->call('mute', $group->id, 24);
+
+    expect($group->refresh()->isMuted())->toBeTrue()
+        ->and($group->status())->toBe('muted');
+
+    Livewire::test(Failures::class)->call('unmute', $group->id);
+
+    expect($group->refresh()->isMuted())->toBeFalse();
+});
+
+it('filters issues by source', function () {
+    FailureGroup::query()->create(['signature' => str_repeat('w', 64), 'source' => 'request', 'exception_class' => 'E', 'occurrences' => 1, 'last_seen_at' => now()]);
+    FailureGroup::query()->create(['signature' => str_repeat('q', 64), 'source' => 'job', 'exception_class' => 'E', 'occurrences' => 1, 'last_seen_at' => now()]);
+
+    Livewire::test(Failures::class)
+        ->call('setSource', 'request')
+        ->assertViewHas('groups', fn ($groups) => $groups->count() === 1 && $groups->first()->source === 'request');
+});
+
 it('records uptime for configured urls', function () {
     config()->set('vigilance.uptime.urls', ['https://example.test/up']);
     Http::fake(['https://example.test/*' => Http::response('ok', 200)]);

@@ -70,9 +70,12 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('signature', 64)->unique();
             $table->string('type', 16)->nullable();
+            $table->string('source', 16)->nullable()->index();
             $table->string('name')->nullable();
             $table->string('exception_class')->nullable();
             $table->text('message')->nullable();
+            $table->longText('sample')->nullable();
+            $table->json('context')->nullable();
             $table->unsignedBigInteger('occurrences')->default(0);
             $table->string('priority', 16)->nullable();
             $table->string('assignee')->nullable();
@@ -80,6 +83,7 @@ return new class extends Migration
             $table->timestamp('first_seen_at')->nullable();
             $table->timestamp('last_seen_at')->nullable()->index();
             $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('muted_until')->nullable();
             $table->timestamps();
         });
 

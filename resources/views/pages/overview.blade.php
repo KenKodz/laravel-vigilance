@@ -117,8 +117,8 @@
         {{-- Top failing groups --}}
         <div class="v-card min-w-0">
             <div class="v-card__header">
-                <h2 class="v-card__title">Top failure groups</h2>
-                <a href="{{ route('vigilance.failures') }}" class="text-xs v-link">view all</a>
+                <h2 class="v-card__title">Top issues</h2>
+                <a href="{{ route('vigilance.issues') }}" class="text-xs v-link">view all</a>
             </div>
             <ul>
                 @forelse ($topFailing as $group)

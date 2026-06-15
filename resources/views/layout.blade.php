@@ -31,7 +31,7 @@
         'Jobs' => [
             'vigilance.runs'     => ['label' => 'Runs',     'icon' => 'runs'],
             'vigilance.pending'  => ['label' => 'Pending',  'icon' => 'pending'],
-            'vigilance.failures' => ['label' => 'Failures', 'icon' => 'failures'],
+            'vigilance.issues' => ['label' => 'Issues', 'icon' => 'failures'],
             'vigilance.batches'  => ['label' => 'Batches',  'icon' => 'batches'],
             'vigilance.tags'     => ['label' => 'Tags',     'icon' => 'tags'],
         ],
