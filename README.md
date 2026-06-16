@@ -292,6 +292,8 @@ If no mail recipient and no Slack webhook is configured, alerting stays silent
 
 For a production cutover from Horizon, run `vigilance:supervise` as your long-running worker process (under systemd / Supervisor / your platform's process manager) in place of `php artisan horizon`, and run `vigilance:check` as the APM heartbeat on each app server.
 
+**Multi-node fleets.** Running the same supervisor on several servers is fully supported — each node keeps its own heartbeat and worker rows (keyed by node), and the Workers dashboard shows every node with its true total worker count. Each node is identified by its hostname; where that is random or shared (e.g. containers) set a stable `VIGILANCE_SUPERVISOR_HOST` per node so they're told apart.
+
 ## Schema & terminology
 
 A few column/term names differ from the prose, worth knowing if you query the tables directly:

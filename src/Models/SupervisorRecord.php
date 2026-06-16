@@ -7,9 +7,10 @@ use Illuminate\Support\Carbon;
 /**
  * Heartbeat record for a running supervisor process.
  *
+ * @property int $id
  * @property string $name
  * @property ?string $master
- * @property ?string $host
+ * @property string $host
  * @property ?int $pid
  * @property string $status
  * @property ?string $connection
@@ -23,12 +24,6 @@ use Illuminate\Support\Carbon;
 class SupervisorRecord extends VigilanceModel
 {
     protected $table = 'vigilance_supervisors';
-
-    protected $primaryKey = 'name';
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
 
     protected $casts = [
         'pid' => 'integer',

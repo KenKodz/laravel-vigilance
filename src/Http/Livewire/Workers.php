@@ -44,12 +44,14 @@ class Workers extends Component
 
         $supervisors = app(SupervisorState::class)->active($expire);
 
+        // Group workers by (supervisor, host) so each node's card shows only its
+        // own workers — names repeat across nodes in a multi-node fleet.
         /** @var Collection<string, Collection<int, WorkerRecord>> $workers */
         $workers = WorkerRecord::query()
             ->orderBy('supervisor')
             ->orderBy('pid')
-            ->get(['supervisor', 'pid', 'queue', 'connection', 'status'])
-            ->groupBy('supervisor');
+            ->get(['supervisor', 'host', 'pid', 'queue', 'connection', 'status'])
+            ->groupBy(fn (WorkerRecord $w) => $w->supervisor.'@'.$w->host);
 
         return view('vigilance::pages.workers', [
             'control' => app(ControlPlane::class)->status(),

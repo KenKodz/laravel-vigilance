@@ -34,6 +34,9 @@
             <div class="v-card__header">
                 <div class="flex items-center gap-2.5">
                     <h2 class="v-card__title">{{ $supervisor->name }}</h2>
+                    @if ($supervisor->host)
+                        <span class="v-pill uppercase tracking-wide font-mono" title="node">{{ $supervisor->host }}</span>
+                    @endif
                     <span class="text-[11px] uppercase tracking-wide v-faint font-mono">{{ $supervisor->connection }} · {{ $supervisor->queues }} · {{ $supervisor->balance }}</span>
                 </div>
                 <div class="flex items-center gap-3 text-xs">
@@ -45,7 +48,7 @@
                 </div>
             </div>
 
-            @php $rows = $workers[$supervisor->name] ?? collect(); @endphp
+            @php $rows = $workers[$supervisor->name.'@'.$supervisor->host] ?? collect(); @endphp
             @if ($rows->isNotEmpty())
                 <div class="overflow-x-auto" tabindex="0">
                     <table class="v-table v-table--hover">

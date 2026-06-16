@@ -23,11 +23,14 @@ class SupervisorState
     public function heartbeat(SupervisorOptions $options, string $status, array $pools, array $workers): void
     {
         $now = Carbon::now();
+        $host = static::host();
 
+        // Keyed by (name, host): the same supervisor running on several nodes
+        // keeps a row per node, so the dashboard sees the whole fleet instead of
+        // nodes overwriting each other's heartbeat and worker lists.
         SupervisorRecord::query()->updateOrCreate(
-            ['name' => $options->name],
+            ['name' => $options->name, 'host' => $host],
             [
-                'host' => gethostname() ?: null,
                 'pid' => getmypid() ?: null,
                 'status' => $status,
                 'connection' => $options->connection,
@@ -40,12 +43,16 @@ class SupervisorState
             ],
         );
 
-        WorkerRecord::query()->where('supervisor', $options->name)->delete();
+        // Only THIS node's workers — never another node's rows for the same name.
+        WorkerRecord::query()
+            ->where('supervisor', $options->name)
+            ->where('host', $host)
+            ->delete();
 
         if ($workers !== []) {
             WorkerRecord::query()->insert(array_map(fn (array $w) => [
                 'supervisor' => $options->name,
-                'host' => gethostname() ?: null,
+                'host' => $host,
                 'pid' => $w['pid'],
                 'connection' => $options->connection,
                 'queue' => $w['queue'],
@@ -57,14 +64,18 @@ class SupervisorState
         }
     }
 
-    public function forget(string $name): void
+    public function forget(string $name, ?string $host = null): void
     {
-        SupervisorRecord::query()->whereKey($name)->delete();
-        WorkerRecord::query()->where('supervisor', $name)->delete();
+        $host ??= static::host();
+
+        SupervisorRecord::query()->where('name', $name)->where('host', $host)->delete();
+        WorkerRecord::query()->where('supervisor', $name)->where('host', $host)->delete();
     }
 
     /**
-     * Remove supervisors (and their workers) that stopped heartbeating.
+     * Remove supervisors (and their workers) that stopped heartbeating. Operates
+     * per (name, host) row, so a dead node is pruned without touching live nodes
+     * that share its supervisor name.
      */
     public function pruneExpired(int $seconds): void
     {
@@ -72,12 +83,28 @@ class SupervisorState
 
         $stale = SupervisorRecord::query()
             ->where('last_heartbeat_at', '<', $cutoff)
-            ->pluck('name');
+            ->get(['name', 'host']);
 
-        if ($stale->isNotEmpty()) {
-            SupervisorRecord::query()->whereIn('name', $stale)->delete();
-            WorkerRecord::query()->whereIn('supervisor', $stale)->delete();
+        foreach ($stale as $row) {
+            WorkerRecord::query()
+                ->where('supervisor', $row->name)
+                ->where('host', $row->host)
+                ->delete();
         }
+
+        SupervisorRecord::query()
+            ->where('last_heartbeat_at', '<', $cutoff)
+            ->delete();
+    }
+
+    /**
+     * This node's identity for supervisor/worker rows. Configurable so distinct
+     * nodes (especially containers, where gethostname() may be random or shared)
+     * can be told apart; falls back to the hostname.
+     */
+    public static function host(): string
+    {
+        return (string) (config('vigilance.supervision.host') ?: (gethostname() ?: 'localhost'));
     }
 
     /**

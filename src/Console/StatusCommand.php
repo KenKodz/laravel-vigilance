@@ -27,14 +27,22 @@ class StatusCommand extends Command
         }
 
         $supervisors->each(function (SupervisorRecord $s) {
+            $node = $s->host !== '' ? ' @ '.$s->host : '';
+
             $this->components->twoColumnDetail(
-                $s->name.' <fg=gray>('.$s->connection.' · '.$s->queues.')</>',
+                $s->name.$node.' <fg=gray>('.$s->connection.' · '.$s->queues.')</>',
                 $s->status.' · '.$s->processes.' worker(s)',
             );
         });
 
+        $nodes = $supervisors->pluck('host')->unique()->count();
+
         $this->newLine();
-        $this->components->info($supervisors->sum('processes').' worker process(es) across '.$supervisors->count().' supervisor(s).');
+        $this->components->info(
+            $supervisors->sum('processes').' worker process(es) across '.
+            $supervisors->count().' supervisor instance(s)'.
+            ($nodes > 1 ? ' on '.$nodes.' nodes' : '').'.',
+        );
 
         return self::SUCCESS;
     }

@@ -141,9 +141,10 @@ return new class extends Migration
         });
 
         $schema->create('vigilance_supervisors', function (Blueprint $table) {
-            $table->string('name')->primary();
+            $table->bigIncrements('id');
+            $table->string('name')->index();
             $table->string('master')->nullable()->index();
-            $table->string('host')->nullable();
+            $table->string('host')->default('');
             $table->unsignedInteger('pid')->nullable();
             $table->string('status', 16)->default('running');
             $table->string('connection')->nullable();
@@ -154,6 +155,10 @@ return new class extends Migration
             $table->json('options')->nullable();
             $table->timestamp('last_heartbeat_at')->nullable()->index();
             $table->timestamps();
+
+            // One heartbeat row per (supervisor, host): a supervisor of the same
+            // name running on multiple nodes must not clobber the others' rows.
+            $table->unique(['name', 'host']);
         });
 
         $schema->create('vigilance_monitored_tags', function (Blueprint $table) {
@@ -164,7 +169,7 @@ return new class extends Migration
         $schema->create('vigilance_workers', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('supervisor')->index();
-            $table->string('host')->nullable();
+            $table->string('host')->default('');
             $table->unsignedInteger('pid')->nullable();
             $table->string('connection')->nullable();
             $table->string('queue')->nullable();
@@ -172,7 +177,8 @@ return new class extends Migration
             $table->timestamp('last_heartbeat_at')->nullable()->index();
             $table->timestamps();
 
-            $table->unique(['supervisor', 'pid']);
+            // pid is only unique within a host, so the host is part of the key.
+            $table->unique(['supervisor', 'host', 'pid']);
         });
 
         // ---- APM telemetry (Pulse-style entries / aggregates / values) ----

@@ -19,7 +19,7 @@ it('renders running supervisors and their workers', function () {
         'processes' => 1, 'pools' => ['default' => 1], 'options' => [], 'last_heartbeat_at' => now(),
     ]);
     WorkerRecord::create([
-        'supervisor' => 'supervisor-1', 'pid' => 4242, 'connection' => 'database',
+        'supervisor' => 'supervisor-1', 'host' => 'host', 'pid' => 4242, 'connection' => 'database',
         'queue' => 'default', 'status' => 'running', 'last_heartbeat_at' => now(),
     ]);
 

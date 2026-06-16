@@ -6,6 +6,41 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-06-16
+
+Multi-node fix from a distributed-deployment attack pass, plus an adversarial
+audit of the RUM symbolicator.
+
+### Fixed
+- **Multi-node fleets under-reported their workers / supervisors clobbered each
+  other.** Supervisor and worker heartbeat rows were keyed by supervisor *name*
+  only (the `vigilance_supervisors` table even made `name` its primary key). When
+  the same supervisor config ran on more than one server — the normal way to
+  scale workers horizontally — each node's heartbeat overwrote the others' row
+  and each node's worker-set write *deleted the other nodes' worker rows*. The
+  dashboard then showed a single flapping node and a worker count far below the
+  real fleet (e.g. 5 shown for an 8-worker, 2-node fleet). State is now keyed by
+  **(name, host)**: every node keeps its own supervisor + worker rows, the
+  dashboard shows each node (with its hostname) and the true fleet totals, and
+  pruning/`forget` act per-node so a dead node never removes a live one's rows.
+  A configurable `supervision.host` (env `VIGILANCE_SUPERVISOR_HOST`, default the
+  machine hostname) identifies each node — set it where the hostname is random or
+  shared (e.g. containers).
+
+  **Schema note:** the base migration changed (`vigilance_supervisors` gains an
+  `id` primary key + a `unique(name, host)`; `vigilance_workers` is now
+  `unique(supervisor, host, pid)`). Existing installs must run
+  `php artisan migrate:fresh` (supervisor/worker rows are ephemeral heartbeats,
+  so nothing of value is lost).
+
+### Validated (no code change)
+- **RUM symbolicator hardening**: the public RUM stack-trace symbolicator was
+  attacked with 200 KB pathological stacks (no-match lazy-regex worst case → 0.1 ms,
+  no ReDoS), malformed source maps (invalid JSON, bad VLQ) and high token counts —
+  it stays fast and degrades to "unsymbolicated" without crashing. Stacks are
+  capped (8 KB) and errors per request bounded (≤5) before symbolication, on top
+  of the endpoint's rate limit.
+
 ## [0.5.5] - 2026-06-16
 
 A second, harder adversarial pass — DDoS/flood amplification, a cardinality bomb,

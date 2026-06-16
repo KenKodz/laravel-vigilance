@@ -843,6 +843,13 @@ return [
 
         // Cache store used for pause/restart/terminate flags (null = default).
         'cache_store' => null,
+
+        // This node's identity in the supervisor/worker heartbeat tables. In a
+        // multi-node fleet each node keeps its own rows (keyed by name + host),
+        // so the dashboard sees the whole fleet rather than nodes overwriting
+        // each other. Defaults to the machine hostname; set it explicitly where
+        // the hostname is random or shared (e.g. containers).
+        'host' => env('VIGILANCE_SUPERVISOR_HOST'),
     ],
 
     'defaults' => [
