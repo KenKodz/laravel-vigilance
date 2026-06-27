@@ -6,6 +6,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Duplicate "queued" job runs under Laravel Octane on Vapor.** Vapor's Octane
+  runtime boots the application twice in the same PHP process (once for
+  `config:cache`, then again for the worker). Because `Queue::createPayloadUsing`
+  registers into a process-static array, the payload hook stacked on the second
+  boot and every dispatch wrote two `Queued` records with the same UUID — only
+  one of which was ever advanced to `Running`/`Succeeded`, leaving a permanent
+  ghost row. Registration is now guarded so the hook is installed once per
+  process regardless of how many times the service provider boots.
+
 ## [0.6.1] - 2026-06-26
 
 ### Fixed

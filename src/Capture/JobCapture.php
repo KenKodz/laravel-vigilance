@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Queue;
 class JobCapture
 {
     /**
-     * Prevents Queue::createPayloadUsing() accumulating in the static callback array when the app boots twice (e.g. Vapor's Octane runtime).
+     * Queue::$createPayloadCallbacks is process-static, so a callback survives
+     * across application boots. Vapor's Octane runtime boots the app twice in
+     * one process (config:cache, then the worker); without this guard the
+     * payload hook would stack and write a duplicate "queued" row per dispatch.
      */
     private static bool $payloadCallbackRegistered = false;
 

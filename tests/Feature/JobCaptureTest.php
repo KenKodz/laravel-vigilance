@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vigilance\Capture\JobCapture;
+use Vigilance\Capture\Recorder;
 use Vigilance\Enums\RunStatus;
 use Vigilance\Enums\RunType;
 use Vigilance\Models\FailureGroup;
@@ -31,6 +33,24 @@ it('captures a successful job run with parameters and tags', function () {
         ->and($run->parameters)->not->toHaveKey('middleware');
 
     expect($run->tags)->toContain('sample', 'amount:42');
+});
+
+it('does not create a duplicate queued run when the app boots twice', function () {
+    config()->set('queue.default', 'sync');
+
+    // Simulate a second full application boot in the same PHP process — Vapor's
+    // Octane runtime boots once for config:cache and again for the worker.
+    // Queue::$createPayloadCallbacks is process-static, so a naive re-register
+    // would stack a second callback and write a duplicate "queued" row (same
+    // uuid) per dispatch that never gets updated to a terminal status.
+    (new JobCapture(app(Recorder::class)))->register();
+
+    SampleJob::dispatch(5, 'once');
+
+    $runs = Run::query()->where('name', SampleJob::class)->get();
+
+    expect($runs)->toHaveCount(1)
+        ->and($runs->first()->status)->toBe(RunStatus::Succeeded);
 });
 
 it('redacts secret-looking parameters', function () {
